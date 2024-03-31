@@ -31,6 +31,10 @@ repositories {
 		name = "Fuzs Mod Resources"
 		url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
 	}
+	maven {
+		url "https://cursemaven.com"
+	}
+	maven { url "https://maven.architectury.dev/" }
 }
 
 loom {

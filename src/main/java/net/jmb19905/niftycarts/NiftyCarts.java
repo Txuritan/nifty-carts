@@ -24,16 +24,18 @@ import net.jmb19905.niftycarts.network.serverbound.ActionKeyMessage;
 import net.jmb19905.niftycarts.network.serverbound.OpenSupplyCartMessage;
 import net.jmb19905.niftycarts.network.serverbound.RequestCartUpdate;
 import net.jmb19905.niftycarts.network.serverbound.ToggleSlowMessage;
-import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.jmb19905.niftycarts.util.GoalAdder;
+import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.StatFormatter;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.flag.FeatureFlags;
@@ -41,6 +43,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.function.Supplier;
@@ -111,6 +114,10 @@ public class NiftyCarts implements ModInitializer {
 	public static final MenuType<PlowMenu> PLOW_MENU_TYPE = new MenuType<>(PlowMenu::new, FeatureFlags.DEFAULT_FLAGS);
 
 	public static final ResourceLocation CART_ONE_CM = new ResourceLocation(MOD_ID, "cart_one_cm");
+
+	public static final TagKey<Block> PLOW_BREAKABLE_HOE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/hoe"));
+	public static final TagKey<Block> PLOW_BREAKABLE_SHOVEL = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/shovel"));
+	public static final TagKey<Block> PLOW_BREAKABLE_AXE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/axe"));
 
 	@Override
 	public void onInitialize() {

@@ -12,6 +12,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.InteractionHand;
@@ -21,10 +22,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -82,10 +83,32 @@ public final class PlowEntity extends AbstractDrawnInventoryEntity {
                 final BlockPos blockPos = new BlockPos((int) blockPosX, (int) (this.getY() - 0.5D), (int) blockPosZ);
                 final boolean damageable = stack.isDamageableItem();
                 final int count = stack.getCount();
+                tryBreakBlock(stack, blockPos.above(), level(), player);
                 stack.getItem().useOn(new ProxyItemUseContext(player, stack, new BlockHitResult(Vec3.ZERO, Direction.UP, blockPos, false)));
                 if (damageable && stack.getCount() < count) {
                     this.playSound(SoundEvents.ITEM_BREAK, 0.8F, 0.8F + this.level().random.nextFloat() * 0.4F);
                     this.updateSlot(i);
+                }
+            }
+        }
+    }
+
+    private void tryBreakBlock(ItemStack stack, BlockPos pos, Level level, Player player) {
+        BlockState state = level.getBlockState(pos);
+        TagKey<Block> tag;
+        if (stack.getItem() instanceof HoeItem) {
+            tag = NiftyCarts.PLOW_BREAKABLE_HOE;
+        } else if (stack.getItem() instanceof ShovelItem) {
+            tag = NiftyCarts.PLOW_BREAKABLE_SHOVEL;
+        } else if (stack.getItem() instanceof AxeItem) {
+            tag = NiftyCarts.PLOW_BREAKABLE_AXE;
+        } else return;
+        if (state.isAir()) return;
+        if (state.is(tag)) {
+            if (level.removeBlock(pos, false)) {
+                level.destroyBlock(pos, false);
+                if (!state.requiresCorrectToolForDrops() || stack.isCorrectToolForDrops(state)) {
+                    Block.dropResources(state, level, pos, level.getBlockEntity(pos), player, stack);
                 }
             }
         }
