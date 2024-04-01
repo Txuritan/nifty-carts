@@ -28,12 +28,14 @@ import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.jmb19905.niftycarts.util.GoalAdder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.StatFormatter;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.flag.FeatureFlags;
@@ -41,6 +43,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.util.function.Supplier;
@@ -112,6 +115,10 @@ public class NiftyCarts implements ModInitializer {
 
 	public static final ResourceLocation CART_ONE_CM = new ResourceLocation(MOD_ID, "cart_one_cm");
 
+	public static final TagKey<Block> PLOW_BREAKABLE_HOE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/hoe"));
+	public static final TagKey<Block> PLOW_BREAKABLE_SHOVEL = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/shovel"));
+	public static final TagKey<Block> PLOW_BREAKABLE_AXE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/axe"));
+
 	@Override
 	public void onInitialize() {
 		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, NiftyCartsConfig.spec());
@@ -154,7 +161,7 @@ public class NiftyCarts implements ModInitializer {
 			}
 		});
 
-		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes().build());
+		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
 
 		UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			final Entity rider = entity.getControllingPassenger();

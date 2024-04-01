@@ -34,6 +34,18 @@ repositories {
 	maven {
 		url "https://cursemaven.com"
 	}
+	maven { url "https://maven.architectury.dev/" }
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
 }
 
 loom {
@@ -60,6 +72,7 @@ dependencies {
 	//modImplementation "curse.maven:mythic-mounts-517650:4758535"
 
 	modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${project.forgeconfigapiport_version}"   // `modVersion` e.g. 7.0.0 for Minecraft 1.20
+	modImplementation "maven.modrinth:sodium:mc1.20.4-0.5.8"
 }
 
 processResources {
