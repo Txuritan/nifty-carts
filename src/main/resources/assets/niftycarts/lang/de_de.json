@@ -1,0 +1,16 @@
+{
+  "item.niftycarts.supply_cart": "Transportkarren",
+  "item.niftycarts.plow": "Pflug",
+  "item.niftycarts.animal_cart": "Tierkarren",
+  "item.niftycarts.wheel": "Rad",
+  "entity.niftycarts.supply_cart": "Transportkarren",
+  "entity.niftycarts.plow": "Pflug",
+  "entity.niftycarts.animal_cart": "Tierkarren",
+  "entity.niftycarts.postilion": "Postillion",
+  "key.categories.niftycarts": "NiftyCarts",
+  "key.niftycarts.desc": "Aktionstaste",
+  "subtitles.niftycarts.cart.attached": "Karren wird angehängt",
+  "subtitles.niftycarts.cart.detached": "Karren wird abgehängt",
+  "subtitles.niftycarts.cart.placed": "Karren wird platziert",
+  "stat.niftycarts.cart_one_cm": "Strecke auf Karren gefahren"
+}
