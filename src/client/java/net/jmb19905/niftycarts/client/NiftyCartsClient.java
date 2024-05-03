@@ -1,6 +1,7 @@
 package net.jmb19905.niftycarts.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeConfigRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -9,6 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.jmb19905.niftycarts.NiftyCarts;
+import net.jmb19905.niftycarts.NiftyCartsConfig;
 import net.jmb19905.niftycarts.client.renderer.NiftyCartsModelLayers;
 import net.jmb19905.niftycarts.client.renderer.entity.AnimalCartRenderer;
 import net.jmb19905.niftycarts.client.renderer.entity.PlowRenderer;
@@ -25,6 +27,7 @@ import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.glfw.GLFW;
 
 import static net.jmb19905.niftycarts.NiftyCarts.ACTION_KEY_MESSAGE_ID;
@@ -36,6 +39,8 @@ public class NiftyCartsClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		ForgeConfigRegistry.INSTANCE.register(NiftyCarts.MOD_ID, ModConfig.Type.CLIENT, NiftyCartsConfig.clientSpec());
+
 		ClientPlayNetworking.registerGlobalReceiver(UPDATE_DRAWN_MESSAGE_ID, (client, handler, buf, responseSender) -> {
 			UpdateDrawnMessage msg = new UpdateDrawnMessage();
 			msg.decode(buf);
