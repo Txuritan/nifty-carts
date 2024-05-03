@@ -42,6 +42,7 @@ public abstract class AbstractHorseMixin extends LivingEntity {
         }
     }
 
+    @SuppressWarnings("UnreachableCode")
     @Override
     public void travel(Vec3 vec3) {
         var living = ((AbstractHorse) (Object) this).getControllingPassenger();
