@@ -52,7 +52,7 @@ public final class NiftyCartsConfig {
             this.renderSupplies = builder.comment("Enables/Disables the rendering of all supplies")
                     .define("render_supplies", true);
             this.renderSupplyGear = builder.comment("Falls back to rendering as items if false").define("render_supply_gear", true);
-            this.renderSupplyFlowers = builder.comment("Falls back to rendering as blocks if false").define("render_supply_flowers", true);
+            this.renderSupplyFlowers = builder.comment("Falls back to rendering as items if false").define("render_supply_flowers", true);
             this.renderSupplyPaintings = builder.comment("Falls back to rendering as items if false").define("render_supply_paintings", true);
             this.renderSupplyWheel = builder.comment("Falls back to rendering as items if false").define("render_supply_wheel", true);
         }
