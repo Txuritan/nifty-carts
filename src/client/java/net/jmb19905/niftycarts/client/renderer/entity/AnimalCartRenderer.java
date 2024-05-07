@@ -1,20 +1,15 @@
 package net.jmb19905.niftycarts.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.datafixers.util.Pair;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.client.renderer.NiftyCartsModelLayers;
 import net.jmb19905.niftycarts.client.renderer.entity.model.AnimalCartModel;
 import net.jmb19905.niftycarts.entity.AnimalCartEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public final class AnimalCartRenderer extends DrawnRenderer<AnimalCartEntity, AnimalCartModel> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(NiftyCarts.MOD_ID, "textures/entity/animal_cart.png");
@@ -26,12 +21,11 @@ public final class AnimalCartRenderer extends DrawnRenderer<AnimalCartEntity, An
 
     @Override
     protected void renderContents(final AnimalCartEntity entity, final float delta, final PoseStack stack, final MultiBufferSource source, final int packedLight) {
-        final List<Pair<Holder<BannerPattern>, DyeColor>> list = entity.getBannerPattern();
-        if (!list.isEmpty()) {
+        if (entity.getBannerColor() != null) {
             stack.pushPose();
             this.model.getBody().translateAndRotate(stack);
             stack.translate(0.0D, -0.6D, 1.56D);
-            this.renderBanner(stack, source, packedLight, list);
+            this.renderBanner(entity, stack, source, delta, packedLight, entity.getBannerColor(), entity.getBannerPattern());
             stack.popPose();
         }
     }

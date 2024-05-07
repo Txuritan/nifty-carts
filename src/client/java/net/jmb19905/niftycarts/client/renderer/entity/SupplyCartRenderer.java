@@ -2,7 +2,6 @@ package net.jmb19905.niftycarts.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
@@ -14,25 +13,29 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.PaintingTextureManager;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.Holder;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.PaintingVariant;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.item.armortrim.ArmorTrim;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
@@ -43,11 +46,9 @@ import net.jmb19905.niftycarts.client.renderer.NiftyCartsModelLayers;
 import net.jmb19905.niftycarts.client.renderer.entity.model.SupplyCartModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Predicate;
@@ -57,16 +58,15 @@ import java.util.stream.StreamSupport;
 public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, SupplyCartModel> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(NiftyCarts.MOD_ID, "textures/entity/supply_cart.png");
 
-    // access to use the forge code for armor texture which is an instance method for some reason
-    private static final HumanoidArmorLayer<LivingEntity, HumanoidModel<LivingEntity>, HumanoidModel<LivingEntity>> DUMMY = new HumanoidArmorLayer<>(null, null, null, Minecraft.getInstance().getModelManager());
-
     private final HumanoidModel<LivingEntity> leggings, armor;
+    private final TextureAtlas armorTrimAtlas;
 
     public SupplyCartRenderer(final EntityRendererProvider.Context renderManager) {
         super(renderManager, new SupplyCartModel(renderManager.bakeLayer(NiftyCartsModelLayers.SUPPLY_CART)));
         this.leggings = new HumanoidModel<>(renderManager.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR));
         this.armor = new HumanoidModel<>(renderManager.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR));
         this.shadowRadius = 1.0F;
+        this.armorTrimAtlas = renderManager.getModelManager().getAtlas(Sheets.ARMOR_TRIMS_SHEET);
     }
 
     @Override
@@ -100,10 +100,9 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
         if (contents.renderer != null) {
             contents.renderer.render(this, entity, stack, source, packedLight, cargo);
         }
-        final List<Pair<Holder<BannerPattern>, DyeColor>> list = entity.getBannerPattern();
-        if (!list.isEmpty()) {
+        if (entity.getBannerColor() != null) {
             stack.translate(0.0D, -0.6D, 1.5D);
-            this.renderBanner(stack, source, packedLight, list);
+            this.renderBanner(entity, stack, source, delta, packedLight, entity.getBannerColor(), entity.getBannerPattern());
         }
         stack.popPose();
     }
@@ -202,7 +201,7 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
             } else {
                 rng.setSeed(32L * i + Objects.hashCode(BuiltInRegistries.ITEM.getKey(itemStack.getItem())));
                 stack.translate(x, -0.15D + ((ix + iz) % 2 == 0 ? 0.0D : 1.0e-4D), z);
-                if ((ArmorItem.class.equals(itemStack.getItem().getClass()) || DyeableArmorItem.class.equals(itemStack.getItem().getClass())) && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
+                if (ArmorItem.class.equals(itemStack.getItem().getClass()) && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
                     this.renderArmor(stack, source, packedLight, itemStack, ix);
                 } else {
                     stack.scale(0.7F, 0.7F, 0.7F);
@@ -274,30 +273,45 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
             }
         }
         stack.scale(0.75F, 0.75F, 0.75F);
-        final VertexConsumer armorBuf = ItemRenderer.getArmorFoilBuffer(source,
-                RenderType.armorCutoutNoCull(getArmorResource(itemStack, slot, null)),
-                false,
-                itemStack.hasFoil()
-        );
-        if (armorItem instanceof DyeableArmorItem) {
-            final int rgb = ((DyeableArmorItem) armorItem).getColor(itemStack);
-            final float r = (float) (rgb >> 16 & 255) / 255.0F;
-            final float g = (float) (rgb >> 8 & 255) / 255.0F;
-            final float b = (float) (rgb & 255) / 255.0F;
-            m.renderToBuffer(stack, armorBuf, packedLight, OverlayTexture.NO_OVERLAY, r, g, b, 1.0F);
-            final VertexConsumer overlayBuf = ItemRenderer.getArmorFoilBuffer(source,
-                    RenderType.armorCutoutNoCull(getArmorResource(itemStack, slot, "overlay")),
+        ArmorMaterial material = armorItem.getMaterial().value();
+
+        final int rgb = itemStack.is(ItemTags.DYEABLE) ? DyedItemColor.getOrDefault(itemStack, -6265536) : -1;
+
+        boolean usesInnerModel = slot == EquipmentSlot.LEGS;
+
+        ArmorMaterial.Layer layer;
+        float r;
+        float g;
+        float b;
+        VertexConsumer armor;
+        for(Iterator<ArmorMaterial.Layer> it = material.layers().iterator(); it.hasNext(); m.renderToBuffer(stack, armor, packedLight, OverlayTexture.NO_OVERLAY, r, g, b, 1.0F)) {
+            layer = it.next();
+            armor = ItemRenderer.getArmorFoilBuffer(source,
+                    RenderType.armorCutoutNoCull(layer.texture(usesInnerModel)),
                     false,
                     itemStack.hasFoil()
             );
-            m.renderToBuffer(stack, overlayBuf, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-        } else {
-            m.renderToBuffer(stack, armorBuf, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            if (layer.dyeable() && rgb != -1) {
+                r = (float) FastColor.ARGB32.red(rgb) / 255.0F;
+                g = (float) FastColor.ARGB32.green(rgb) / 255.0F;
+                b = (float) FastColor.ARGB32.blue(rgb) / 255.0F;
+            } else {
+                r = 1.0F;
+                g = 1.0F;
+                b = 1.0F;
+            }
         }
-    }
-    public ResourceLocation getArmorResource(ItemStack stack, EquipmentSlot slot, @Nullable String type) {
-        ArmorItem item = (ArmorItem)stack.getItem();
-        return DUMMY.getArmorLocation(item, DUMMY.usesInnerModel(slot), type);
+
+        ArmorTrim armorTrim = itemStack.get(DataComponents.TRIM);
+        if (armorTrim != null) {
+            TextureAtlasSprite textureAtlasSprite = this.armorTrimAtlas.getSprite(usesInnerModel ? armorTrim.innerTexture(armorItem.getMaterial()) : armorTrim.outerTexture(armorItem.getMaterial()));
+            VertexConsumer vertexConsumer = textureAtlasSprite.wrap(source.getBuffer(Sheets.armorTrimsSheet(armorTrim.pattern().value().decal())));
+            m.renderToBuffer(stack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
+        if (itemStack.hasFoil()) {
+            m.renderToBuffer(stack, source.getBuffer(RenderType.armorEntityGlint()), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 
     private void renderPainting(final PaintingVariant painting, final PoseStack stack, final VertexConsumer buf, final int packedLight) {
@@ -307,7 +321,7 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
         final TextureAtlasSprite art = uploader.get(painting);
         final TextureAtlasSprite back = uploader.getBackSprite();
         final Matrix4f model = stack.last().pose();
-        final Matrix3f normal = stack.last().normal();
+        final PoseStack.Pose pose = stack.last();
         final int blockWidth = width / 16;
         final int blockHeight = height / 16;
         final float offsetX = -blockWidth / 2.0F;
@@ -331,41 +345,41 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
                 final float u1 = art.getU(uvX * (blockWidth - x - 1));
                 final float v0 = art.getV(uvY * (blockHeight - y));
                 final float v1 = art.getV(uvY * (blockHeight - y - 1));
-                vert(model, normal, buf, x1, y0, u1, v0, -depth, 0, 0, -1, packedLight);
-                vert(model, normal, buf, x0, y0, u0, v0, -depth, 0, 0, -1, packedLight);
-                vert(model, normal, buf, x0, y1, u0, v1, -depth, 0, 0, -1, packedLight);
-                vert(model, normal, buf, x1, y1, u1, v1, -depth, 0, 0, -1, packedLight);
+                vert(model, pose, buf, x1, y0, u1, v0, -depth, 0, 0, -1, packedLight);
+                vert(model, pose, buf, x0, y0, u0, v0, -depth, 0, 0, -1, packedLight);
+                vert(model, pose, buf, x0, y1, u0, v1, -depth, 0, 0, -1, packedLight);
+                vert(model, pose, buf, x1, y1, u1, v1, -depth, 0, 0, -1, packedLight);
 
-                vert(model, normal, buf, x1, y1, bu0, bv0, depth, 0, 0, 1, packedLight);
-                vert(model, normal, buf, x0, y1, bu1, bv0, depth, 0, 0, 1, packedLight);
-                vert(model, normal, buf, x0, y0, bu1, bv1, depth, 0, 0, 1, packedLight);
-                vert(model, normal, buf, x1, y0, bu0, bv1, depth, 0, 0, 1, packedLight);
+                vert(model, pose, buf, x1, y1, bu0, bv0, depth, 0, 0, 1, packedLight);
+                vert(model, pose, buf, x0, y1, bu1, bv0, depth, 0, 0, 1, packedLight);
+                vert(model, pose, buf, x0, y0, bu1, bv1, depth, 0, 0, 1, packedLight);
+                vert(model, pose, buf, x1, y0, bu0, bv1, depth, 0, 0, 1, packedLight);
 
-                vert(model, normal, buf, x1, y1, bu0, bv0, -depth, 0, 1, 0, packedLight);
-                vert(model, normal, buf, x0, y1, bu1, bv0, -depth, 0, 1, 0, packedLight);
-                vert(model, normal, buf, x0, y1, bu1, bvp, depth, 0, 1, 0, packedLight);
-                vert(model, normal, buf, x1, y1, bu0, bvp, depth, 0, 1, 0, packedLight);
+                vert(model, pose, buf, x1, y1, bu0, bv0, -depth, 0, 1, 0, packedLight);
+                vert(model, pose, buf, x0, y1, bu1, bv0, -depth, 0, 1, 0, packedLight);
+                vert(model, pose, buf, x0, y1, bu1, bvp, depth, 0, 1, 0, packedLight);
+                vert(model, pose, buf, x1, y1, bu0, bvp, depth, 0, 1, 0, packedLight);
 
-                vert(model, normal, buf, x1, y0, bu0, bv0, depth, 0, -1, 0, packedLight);
-                vert(model, normal, buf, x0, y0, bu1, bv0, depth, 0, -1, 0, packedLight);
-                vert(model, normal, buf, x0, y0, bu1, bvp, -depth, 0, -1, 0, packedLight);
-                vert(model, normal, buf, x1, y0, bu0, bvp, -depth, 0, -1, 0, packedLight);
+                vert(model, pose, buf, x1, y0, bu0, bv0, depth, 0, -1, 0, packedLight);
+                vert(model, pose, buf, x0, y0, bu1, bv0, depth, 0, -1, 0, packedLight);
+                vert(model, pose, buf, x0, y0, bu1, bvp, -depth, 0, -1, 0, packedLight);
+                vert(model, pose, buf, x1, y0, bu0, bvp, -depth, 0, -1, 0, packedLight);
 
-                vert(model, normal, buf, x1, y1, bup, bv0, depth, -1, 0, 0, packedLight);
-                vert(model, normal, buf, x1, y0, bup, bv1, depth, -1, 0, 0, packedLight);
-                vert(model, normal, buf, x1, y0, bu0, bv1, -depth, -1, 0, 0, packedLight);
-                vert(model, normal, buf, x1, y1, bu0, bv0, -depth, -1, 0, 0, packedLight);
+                vert(model, pose, buf, x1, y1, bup, bv0, depth, -1, 0, 0, packedLight);
+                vert(model, pose, buf, x1, y0, bup, bv1, depth, -1, 0, 0, packedLight);
+                vert(model, pose, buf, x1, y0, bu0, bv1, -depth, -1, 0, 0, packedLight);
+                vert(model, pose, buf, x1, y1, bu0, bv0, -depth, -1, 0, 0, packedLight);
 
-                vert(model, normal, buf, x0, y1, bup, bv0, -depth, 1, 0, 0, packedLight);
-                vert(model, normal, buf, x0, y0, bup, bv1, -depth, 1, 0, 0, packedLight);
-                vert(model, normal, buf, x0, y0, bu0, bv1, depth, 1, 0, 0, packedLight);
-                vert(model, normal, buf, x0, y1, bu0, bv0, depth, 1, 0, 0, packedLight);
+                vert(model, pose, buf, x0, y1, bup, bv0, -depth, 1, 0, 0, packedLight);
+                vert(model, pose, buf, x0, y0, bup, bv1, -depth, 1, 0, 0, packedLight);
+                vert(model, pose, buf, x0, y0, bu0, bv1, depth, 1, 0, 0, packedLight);
+                vert(model, pose, buf, x0, y1, bu0, bv0, depth, 1, 0, 0, packedLight);
             }
         }
     }
 
-    private static void vert(final Matrix4f stack, final Matrix3f normal, final VertexConsumer buf, final float x, final float y, final float u, final float v, final float z, final int nx, final int ny, final int nz, final int packedLight) {
-        buf.vertex(stack, x, y, z).color(0xFF, 0xFF, 0xFF, 0xFF).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, nx, ny, nz).endVertex();
+    private static void vert(final Matrix4f stack, final PoseStack.Pose pose, final VertexConsumer buf, final float x, final float y, final float u, final float v, final float z, final int nx, final int ny, final int nz, final int packedLight) {
+        buf.vertex(stack, x, y, z).color(0xFF, 0xFF, 0xFF, 0xFF).uv(u, v).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(pose, nx, ny, nz).endVertex();
     }
 
     @Override

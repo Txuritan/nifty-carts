@@ -28,7 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector3f;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -58,26 +57,19 @@ public class SupplyCartEntity extends AbstractDrawnInventoryEntity {
     }
 
     public float getPassengersRidingOffsetY(EntityDimensions entityDimensions, float f) {
-        return (entityDimensions.height - 8f / 16f) * f;
+        return (entityDimensions.height() - 9f / 16f) * f;
     }
 
     @Override
-    protected @NotNull Vector3f getPassengerAttachmentPoint(Entity entity, EntityDimensions entityDimensions, float f) {
-        return new Vector3f(0, getPassengersRidingOffsetY(entityDimensions, f), 1f / 16f);
+    protected @NotNull Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions entityDimensions, float f) {
+        final Vec3 forward = this.getLookAngle().scale(-0.68);
+        return new Vec3(forward.x, getPassengersRidingOffsetY(entityDimensions, f) + forward.y, forward.z);
     }
-
-    /*@Override
-    public double getPassengersRidingOffset() {
-        return 11.0D / 16.0D;
-    }*/
 
     @Override
     protected void positionRider(Entity passenger, MoveFunction moveFunction) {
+        super.positionRider(passenger, moveFunction);
         if (this.hasPassenger(passenger)) {
-            final Vec3 forward = this.getLookAngle();
-            final Vector3f origin = getPassengerAttachmentPoint(passenger, this.getDimensions(this.getPose()), 1);
-            final Vector3f pos = origin.add(forward.scale(-0.68D).toVector3f());
-            passenger.setPos(this.getX() + pos.x, this.getY() + pos.y - 0.1D + passenger.getMyRidingOffset(passenger), this.getZ() + pos.z);
             passenger.setYBodyRot(this.getYRot() + 180.0F);
             final float f2 = Mth.wrapDegrees(passenger.getYRot() - this.getYRot() + 180.0F);
             final float f1 = Mth.clamp(f2, -105.0F, 105.0F);
@@ -88,10 +80,10 @@ public class SupplyCartEntity extends AbstractDrawnInventoryEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
         for (final EntityDataAccessor<ItemStack> parameter : CARGO) {
-            this.entityData.define(parameter, ItemStack.EMPTY);
+            builder.define(parameter, ItemStack.EMPTY);
         }
     }
 
@@ -158,12 +150,12 @@ public class SupplyCartEntity extends AbstractDrawnInventoryEntity {
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
-        this.addChestVehicleSaveData(compound);
+        this.addChestVehicleSaveData(compound, this.registryAccess());
     }
 
     protected void readAdditionalSaveData(CompoundTag compoundTag) {
         super.readAdditionalSaveData(compoundTag);
-        this.readChestVehicleSaveData(compoundTag);
+        this.readChestVehicleSaveData(compoundTag, this.registryAccess());
     }
 
 }

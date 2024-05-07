@@ -1,5 +1,6 @@
 package net.jmb19905.niftycarts.entity;
 
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
@@ -18,8 +19,8 @@ public class DummyLivingEntity extends LivingEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
         this.setSilent(true);
         this.setNoGravity(true);
         this.setInvulnerable(true);

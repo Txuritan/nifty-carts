@@ -92,36 +92,26 @@ public final class AnimalCartEntity extends AbstractDrawnEntity {
     }
 
     public float getPassengersRidingOffsetY(EntityDimensions entityDimensions, float f) {
-        return (entityDimensions.height - 8f / 16f) * f;
+        return (entityDimensions.height() - 8f / 16f) * f;
     }
 
     @Override
-    protected @NotNull Vector3f getPassengerAttachmentPoint(Entity entity, EntityDimensions entityDimensions, float f) {
-        return new Vector3f(0, getPassengersRidingOffsetY(entityDimensions, f), 1f / 16f);
-    }
-
-    /*@Override
-    public double getPassengersRidingOffset() {
-        return 11.0D / 16.0D;
-    }*/
-
-    @Override
-    public void positionRider(final Entity passenger) {
-        if (this.hasPassenger(passenger)) {
-            double f = -0.1D;
-
-            if (this.getPassengers().size() > 1) {
-                f = this.getPassengers().indexOf(passenger) == 0 ? 0.2D : -0.6D;
-
-                if (passenger instanceof Animal) {
-                    f += 0.2D;
-                }
+    protected @NotNull Vec3 getPassengerAttachmentPoint(Entity entity, EntityDimensions entityDimensions, float f) {
+        double f1 = -0.1d;
+        if (this.getPassengers().size() > 1) {
+            f1 = this.getPassengers().indexOf(entity) == 0 ? 0.2d : -0.6d;
+            if (entity instanceof Animal) {
+                f1 += 0.2d;
             }
+        }
+        final Vec3 forward = this.getLookAngle().scale(f1 + Mth.sin((float) Math.toRadians(this.getXRot())) * 0.7D);
+        return new Vec3(forward.x, getPassengersRidingOffsetY(entityDimensions, f) + forward.y, forward.z);
+    }
 
-            final Vec3 forward = this.getLookAngle();
-            final Vec3 origin = new Vec3(0.0D, this.getPassengersRidingOffsetY(this.getDimensions(this.getPose()), 1), 1.0D / 16.0D);
-            final Vec3 pos = origin.add(forward.scale(f + Mth.sin((float) Math.toRadians(this.getXRot())) * 0.7D));
-            passenger.setPos(this.getX() + pos.x, this.getY() + pos.y + passenger.getMyRidingOffset(passenger), this.getZ() + pos.z);
+    @Override
+    public void positionRider(final Entity passenger, MoveFunction moveFunction) {
+        super.positionRider(passenger, moveFunction);
+        if (this.hasPassenger(passenger)) {
             passenger.setYBodyRot(this.getYRot());
             final float f2 = Mth.wrapDegrees(passenger.getYRot() - this.getYRot());
             final float f1 = Mth.clamp(f2, -105.0F, 105.0F);

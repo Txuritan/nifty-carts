@@ -145,11 +145,11 @@ public final class PlowEntity extends AbstractDrawnInventoryEntity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        this.entityData.define(PLOWING, false);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(PLOWING, false);
         for (final EntityDataAccessor<ItemStack> param : TOOLS) {
-            this.entityData.define(param, ItemStack.EMPTY);
+            builder.define(param, ItemStack.EMPTY);
         }
     }
 
@@ -164,14 +164,14 @@ public final class PlowEntity extends AbstractDrawnInventoryEntity {
     @Override
     protected void addAdditionalSaveData(final CompoundTag compound) {
         super.addAdditionalSaveData(compound);
-        ContainerHelper.saveAllItems(compound, this.getItemStacks());
+        ContainerHelper.saveAllItems(compound, this.getItemStacks(), this.registryAccess());
         compound.putBoolean("Plowing", this.entityData.get(PLOWING));
     }
 
     @Override
     protected void readAdditionalSaveData(final CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        ContainerHelper.loadAllItems(compound, this.getItemStacks());
+        ContainerHelper.loadAllItems(compound, this.getItemStacks(), this.registryAccess());
         this.entityData.set(PLOWING, compound.getBoolean("Plowing"));
     }
 

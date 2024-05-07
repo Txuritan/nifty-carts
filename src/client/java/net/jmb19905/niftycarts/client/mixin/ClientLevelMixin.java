@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
-import net.jmb19905.niftycarts.network.serverbound.RequestCartUpdate;
+import net.jmb19905.niftycarts.network.serverbound.RequestCartUpdatePayload;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,10 +18,7 @@ public class ClientLevelMixin {
     @Inject(method = "addEntity", at = @At("TAIL"))
     public void addEntity(Entity entity, CallbackInfo ci) {
         if (entity instanceof AbstractDrawnEntity d) {
-            var buf = PacketByteBufs.create();
-            RequestCartUpdate msg = new RequestCartUpdate(d.getId());
-            msg.encode(buf);
-            ClientPlayNetworking.send(NiftyCarts.REQUEST_CART_UPDATE_MESSAGE_ID, buf);
+            ClientPlayNetworking.send(new RequestCartUpdatePayload(d.getId()));
         }
     }
 

@@ -20,6 +20,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ public abstract class DrawnRenderer<T extends AbstractDrawnEntity, M extends Ent
         stack.scale(-1.0F, -1.0F, 1.0F);
     }
 
-    protected void renderBanner(final PoseStack stack, final MultiBufferSource source, final int packedLight, final List<Pair<Holder<BannerPattern>, DyeColor>> banner) {
+    protected void renderBanner(final T entity, final PoseStack stack, final MultiBufferSource source, float delta, final int packedLight, final DyeColor color, final BannerPatternLayers banner) {
         stack.pushPose();
         stack.mulPose(Axis.YP.rotationDegrees(90.0F));
         final float scale = 2.0F / 3.0F;
@@ -89,11 +90,14 @@ public abstract class DrawnRenderer<T extends AbstractDrawnEntity, M extends Ent
         this.flag.x = -4.0F;
         this.flag.y = -26.0F;
         this.flag.z = 1.5F;
-        this.flag.xRot = 0.0F;
-        BannerRenderer.renderPatterns(stack, source, packedLight, OverlayTexture.NO_OVERLAY, this.flag, ModelBakery.BANNER_BASE, true, banner);
+        float k = ((float)Math.floorMod((long)(entity.getX() * 7 + entity.getY() * 9 + entity.getZ() * 13) + entity.level().getGameTime(), 100L) + delta) / 100.0F;
+        this.flag.xRot = (-0.0125F + 0.01F * Mth.cos(Mth.TWO_PI * k)) * Mth.PI;
+        this.flag.xRot = 0;//TODO: Make Banners wave
+        BannerRenderer.renderPatterns(stack, source, packedLight, OverlayTexture.NO_OVERLAY, this.flag, ModelBakery.BANNER_BASE, true, color, banner);
         stack.popPose();
     }
 
+    @SuppressWarnings("UnreachableCode")
     protected void attach(final ModelPart bone, final ModelPart attachment, final Consumer<PoseStack> function, final PoseStack stack) {
         stack.pushPose();
         bone.translateAndRotate(stack);

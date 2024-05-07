@@ -2,6 +2,7 @@ package net.jmb19905.niftycarts.entity;
 
 import net.jmb19905.niftycarts.util.NCInventory;
 import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -19,6 +20,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +29,7 @@ public abstract class AbstractDrawnInventoryEntity extends AbstractDrawnEntity i
     private NCInventory itemStacks;
     private final int containerSize;
     @Nullable
-    private ResourceLocation lootTable;
+    private ResourceKey<LootTable> lootTable;
     private long lootTableSeed;
 
     public AbstractDrawnInventoryEntity(EntityType<? extends Entity> entityTypeIn, Level worldIn, int containerSize) {
@@ -141,12 +143,11 @@ public abstract class AbstractDrawnInventoryEntity extends AbstractDrawnEntity i
         this.unpackChestVehicleLootTable(player);
     }
 
-    @Nullable
-    public ResourceLocation getLootTable() {
+    public ResourceKey<LootTable> getLootTable() {
         return this.lootTable;
     }
 
-    public void setLootTable(@Nullable ResourceLocation resourceLocation) {
+    public void setLootTable(@Nullable ResourceKey<LootTable> resourceLocation) {
         this.lootTable = resourceLocation;
     }
 

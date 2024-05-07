@@ -8,7 +8,6 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.NiftyCartsConfig;
 import net.jmb19905.niftycarts.client.renderer.NiftyCartsModelLayers;
@@ -20,18 +19,15 @@ import net.jmb19905.niftycarts.client.renderer.entity.model.AnimalCartModel;
 import net.jmb19905.niftycarts.client.renderer.entity.model.PlowModel;
 import net.jmb19905.niftycarts.client.renderer.entity.model.SupplyCartModel;
 import net.jmb19905.niftycarts.client.screen.PlowScreen;
-import net.jmb19905.niftycarts.network.clientbound.UpdateDrawnMessage;
-import net.jmb19905.niftycarts.network.serverbound.ActionKeyMessage;
-import net.jmb19905.niftycarts.network.serverbound.ToggleSlowMessage;
+import net.jmb19905.niftycarts.network.clientbound.UpdateDrawnPayload;
+import net.jmb19905.niftycarts.network.serverbound.ActionKeyPayload;
+import net.jmb19905.niftycarts.network.serverbound.ToggleSlowPayload;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.glfw.GLFW;
-
-import static net.jmb19905.niftycarts.NiftyCarts.ACTION_KEY_MESSAGE_ID;
-import static net.jmb19905.niftycarts.NiftyCarts.UPDATE_DRAWN_MESSAGE_ID;
 
 public class NiftyCartsClient implements ClientModInitializer {
 
@@ -41,11 +37,9 @@ public class NiftyCartsClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ForgeConfigRegistry.INSTANCE.register(NiftyCarts.MOD_ID, ModConfig.Type.CLIENT, NiftyCartsConfig.clientSpec());
 
-		ClientPlayNetworking.registerGlobalReceiver(UPDATE_DRAWN_MESSAGE_ID, (client, handler, buf, responseSender) -> {
-			UpdateDrawnMessage msg = new UpdateDrawnMessage();
-			msg.decode(buf);
-            assert client.level != null;
-            UpdateDrawnMessage.handle(msg, client.level);
+
+		ClientPlayNetworking.registerGlobalReceiver(UpdateDrawnPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> UpdateDrawnPayload.handle(payload, ctx.client().level));
 		});
 		EntityRendererRegistry.register(NiftyCarts.SUPPLY_CART_ENTITY, SupplyCartRenderer::new);
 		EntityRendererRegistry.register(NiftyCarts.ANIMAL_CART_ENTITY, AnimalCartRenderer::new);
@@ -67,20 +61,14 @@ public class NiftyCartsClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (actionKeyMapping.consumeClick()) {
-				var buf = PacketByteBufs.create();
-				ActionKeyMessage message = new ActionKeyMessage();
-				message.encode(buf);
-				ClientPlayNetworking.send(ACTION_KEY_MESSAGE_ID, buf);
+				ClientPlayNetworking.send(new ActionKeyPayload());
 			}
 			var mc = Minecraft.getInstance();
 			var player = client.player;
-			if (player != null && ToggleSlowMessage.getCart(player).isPresent()) {
+			if (player != null && ToggleSlowPayload.getCart(player).isPresent()) {
 				final var binding = mc.options.keySprint;
 				while (binding.consumeClick()) {
-					var buf = PacketByteBufs.create();
-					var msg = new ToggleSlowMessage();
-					msg.encode(buf);
-					ClientPlayNetworking.send(NiftyCarts.TOGGLE_SLOW_MESSAGE_ID, buf);
+					ClientPlayNetworking.send(new ToggleSlowPayload());
 					KeyMapping.set(binding.getDefaultKey(), false);
 				}
 			}

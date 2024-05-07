@@ -1,17 +1,17 @@
 package net.jmb19905.niftycarts.entity;
 
 import com.mojang.datafixers.util.Pair;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.NiftyCartsConfig;
-import net.jmb19905.niftycarts.network.clientbound.UpdateDrawnMessage;
+import net.jmb19905.niftycarts.network.clientbound.UpdateDrawnPayload;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.jmb19905.niftycarts.util.CartWheel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -51,6 +51,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -86,9 +87,13 @@ public abstract class AbstractDrawnEntity extends Entity {
 
     public AbstractDrawnEntity(final EntityType<? extends Entity> entityTypeIn, final Level worldIn) {
         super(entityTypeIn, worldIn);
-        setMaxUpStep(1.2f);
         this.blocksBuilding = true;
         this.initWheels();
+    }
+
+    @Override
+    public float maxUpStep() {
+        return 1.2f;
     }
 
     //Client
@@ -234,11 +239,8 @@ public abstract class AbstractDrawnEntity extends Entity {
                     } else if (this.pulling instanceof AbstractDrawnEntity) {
                         ((AbstractDrawnEntity) this.pulling).drawn = null;
                     }
-                    var buf = PacketByteBufs.create();
-                    UpdateDrawnMessage drawnMessage = new UpdateDrawnMessage(-1, this.getId());
-                    drawnMessage.encode(buf);
                     for (ServerPlayer player : PlayerLookup.tracking(this)) {
-                        ServerPlayNetworking.send(player, NiftyCarts.UPDATE_DRAWN_MESSAGE_ID, buf);
+                        ServerPlayNetworking.send(player, new UpdateDrawnPayload(-1, this.getId()));
                     }
                     this.pullingUUID = null;
                     if (this.tickCount > 20) {
@@ -252,18 +254,15 @@ public abstract class AbstractDrawnEntity extends Entity {
                                     PULL_MODIFIER_UUID,
                                     "Pull modifier",
                                     this.getConfig().pullSpeed.get(),
-                                    AttributeModifier.Operation.MULTIPLY_TOTAL
+                                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
                             ));
                         }
                     }
                     if (entityIn instanceof PathfinderMob pathfinder) {
                         pathfinder.getNavigation().stop();
                     }
-                    var buf = PacketByteBufs.create();
-                    UpdateDrawnMessage drawnMessage = new UpdateDrawnMessage(entityIn.getId(), this.getId());
-                    drawnMessage.encode(buf);
                     for (ServerPlayer player : PlayerLookup.tracking(this)) {
-                        ServerPlayNetworking.send(player, NiftyCarts.UPDATE_DRAWN_MESSAGE_ID, buf);
+                        ServerPlayNetworking.send(player, new UpdateDrawnPayload(entityIn.getId(), this.getId()));
                     }
                     this.pullingUUID = entityIn.getUUID();
                     if (this.tickCount > 20) {
@@ -616,12 +615,23 @@ public abstract class AbstractDrawnEntity extends Entity {
         return this.entityData.get(BANNER);
     }
 
-    public List<Pair<Holder<BannerPattern>, DyeColor>> getBannerPattern() {
+    public DyeColor getBannerColor() {
         final ItemStack banner = this.getBanner();
-        if (banner.getItem() instanceof BannerItem item) {
-            return BannerBlockEntity.createPatterns(item.getColor(), BannerBlockEntity.getItemPatterns(banner));
+        if (banner.getItem() instanceof BannerItem bannerItem) {
+            return bannerItem.getColor();
         }
-        return List.of();
+        return null;
+    }
+
+    public BannerPatternLayers getBannerPattern() {
+        final ItemStack banner = this.getBanner();
+        if (banner.getItem() instanceof BannerItem) {
+            BannerPatternLayers bannerPatternLayers = banner.get(DataComponents.BANNER_PATTERNS);
+            if (bannerPatternLayers != null) {
+                return bannerPatternLayers;
+            }
+        }
+        return BannerPatternLayers.EMPTY;
     }
 
     @Override
@@ -635,11 +645,11 @@ public abstract class AbstractDrawnEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData() {
-        this.entityData.define(TIME_SINCE_HIT, 0);
-        this.entityData.define(FORWARD_DIRECTION, 1);
-        this.entityData.define(DAMAGE_TAKEN, 0.0F);
-        this.entityData.define(BANNER, ItemStack.EMPTY);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(TIME_SINCE_HIT, 0);
+        builder.define(FORWARD_DIRECTION, 1);
+        builder.define(DAMAGE_TAKEN, 0.0F);
+        builder.define(BANNER, ItemStack.EMPTY);
     }
 
     @Override
@@ -648,7 +658,7 @@ public abstract class AbstractDrawnEntity extends Entity {
             this.pullingUUID = compound.getUUID("PullingUUID");
         }
         if (compound.contains("BannerItem")) {
-            this.setBanner(ItemStack.of(compound.getCompound("BannerItem")));
+            //this.setBanner(ItemStack.of(compound.getCompound("BannerItem")));
         }
     }
 
@@ -659,7 +669,7 @@ public abstract class AbstractDrawnEntity extends Entity {
         }
         final ItemStack banner = this.getBanner();
         if (!banner.isEmpty()) {
-            compound.put("BannerItem", banner.save(new CompoundTag()));
+            //compound.put("BannerItem", banner.save(new CompoundTag()));
         }
     }
 
@@ -678,10 +688,10 @@ public abstract class AbstractDrawnEntity extends Entity {
                     PULL_SLOWLY_MODIFIER_UUID,
                     "Pull slowly modifier",
                     this.getConfig().slowSpeed.get(),
-                    AttributeModifier.Operation.MULTIPLY_TOTAL
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
             ));
         } else {
-            speed.removeModifier(modifier.getId());
+            speed.removeModifier(modifier.id());
         }
     }
 

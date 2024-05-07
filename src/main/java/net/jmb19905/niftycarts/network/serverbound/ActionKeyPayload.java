@@ -3,25 +3,36 @@ package net.jmb19905.niftycarts.network.serverbound;
 import it.unimi.dsi.fastutil.Pair;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
-import net.jmb19905.niftycarts.network.Message;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 
-public class ActionKeyMessage implements Message {
-    @Override
-    public void encode(FriendlyByteBuf buf) {
-    }
+public record ActionKeyPayload() implements CustomPacketPayload {
+
+    public static final Type<ActionKeyPayload> TYPE = CustomPacketPayload.createType(NiftyCarts.MOD_ID + ":action_key");
+    public static final StreamCodec<FriendlyByteBuf, ActionKeyPayload> CODEC = new StreamCodec<>() {
+        @Override
+        public @NotNull ActionKeyPayload decode(FriendlyByteBuf object) {
+            return new ActionKeyPayload();
+        }
+
+        @Override
+        public void encode(FriendlyByteBuf object, ActionKeyPayload object2) {}
+    };
 
     @Override
-    public void decode(FriendlyByteBuf buf) {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void handle(final ActionKeyMessage ignoredMsg, final ServerPlayer player) {
+    public static void handle(final ServerPlayer player) {
         final Entity pulling;
         final Level level = player.level();
         if (player.getVehicle() == null) {

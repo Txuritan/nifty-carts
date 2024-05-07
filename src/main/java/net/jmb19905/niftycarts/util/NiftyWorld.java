@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -68,7 +69,7 @@ public class NiftyWorld extends SavedData {
     }
 
     @Override
-    public @NotNull CompoundTag save(CompoundTag tag) {
+    public @NotNull CompoundTag save(CompoundTag tag, HolderLookup.Provider provider) {
         ListTag drawnList = new ListTag();
         for (AbstractDrawnEntity drawn : pulling.values()) {
             drawnList.add(NbtUtils.createUUID(drawn.getUUID()));
@@ -108,10 +109,9 @@ public class NiftyWorld extends SavedData {
         var dataStorage = Objects.requireNonNull(server.getLevel(levelType)).getDataStorage();
         Factory<NiftyWorld> factory = new Factory<>(
                 NiftyWorld::new,
-                tag -> NiftyWorld.createFromNbt(tag, server.getLevel(levelType)),
+                (tag, provider) -> NiftyWorld.createFromNbt(tag, server.getLevel(levelType)),
                 null
         );
         return dataStorage.computeIfAbsent(factory, NiftyCarts.MOD_ID);
     }
-
 }

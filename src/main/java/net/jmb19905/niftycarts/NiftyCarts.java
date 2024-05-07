@@ -6,8 +6,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
@@ -20,10 +20,8 @@ import net.jmb19905.niftycarts.entity.ai.goal.AvoidCartGoal;
 import net.jmb19905.niftycarts.entity.ai.goal.PullCartGoal;
 import net.jmb19905.niftycarts.entity.ai.goal.RideCartGoal;
 import net.jmb19905.niftycarts.item.CartItem;
-import net.jmb19905.niftycarts.network.serverbound.ActionKeyMessage;
-import net.jmb19905.niftycarts.network.serverbound.OpenSupplyCartMessage;
-import net.jmb19905.niftycarts.network.serverbound.RequestCartUpdate;
-import net.jmb19905.niftycarts.network.serverbound.ToggleSlowMessage;
+import net.jmb19905.niftycarts.network.clientbound.UpdateDrawnPayload;
+import net.jmb19905.niftycarts.network.serverbound.*;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.jmb19905.niftycarts.util.GoalAdder;
 import net.minecraft.core.Registry;
@@ -51,8 +49,8 @@ import java.util.function.Supplier;
 public class NiftyCarts implements ModInitializer {
 	public static final String MOD_ID = "niftycarts";
 
-	public static final Item WHEEL = new Item(new FabricItemSettings());
-	private static final Supplier<CartItem> CART_ITEM_SUPPLIER = () -> new CartItem(new FabricItemSettings().maxCount(1));
+	public static final Item WHEEL = new Item(new Item.Properties());
+	private static final Supplier<CartItem> CART_ITEM_SUPPLIER = () -> new CartItem(new Item.Properties().stacksTo(1));
 	public static final CartItem SUPPLY_CART = CART_ITEM_SUPPLIER.get();
 	public static final CartItem PLOW = CART_ITEM_SUPPLIER.get();
 	public static final CartItem ANIMAL_CART = CART_ITEM_SUPPLIER.get();
@@ -95,12 +93,6 @@ public class NiftyCarts implements ModInitializer {
 					.build()
 	);
 
-	public static final ResourceLocation ACTION_KEY_MESSAGE_ID = new ResourceLocation(NiftyCarts.MOD_ID, "action_key");
-	public static final ResourceLocation TOGGLE_SLOW_MESSAGE_ID = new ResourceLocation(NiftyCarts.MOD_ID, "toggle_slow");
-	public static final ResourceLocation UPDATE_DRAWN_MESSAGE_ID = new ResourceLocation(NiftyCarts.MOD_ID, "update_drawn");
-	public static final ResourceLocation REQUEST_CART_UPDATE_MESSAGE_ID = new ResourceLocation(NiftyCarts.MOD_ID, "request_cart_update");
-	public static final ResourceLocation OPEN_SUPPLY_MESSAGE_ID = new ResourceLocation(NiftyCarts.MOD_ID, "open_supply");
-
 	public static final GoalAdder<Mob> MOB_GOAL_ADDER = GoalAdder.mobGoal(Mob.class)
 			.add(1, PullCartGoal::new)
 			.add(1, RideCartGoal::new)
@@ -119,7 +111,8 @@ public class NiftyCarts implements ModInitializer {
 	public static final TagKey<Block> PLOW_BREAKABLE_SHOVEL = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/shovel"));
 	public static final TagKey<Block> PLOW_BREAKABLE_AXE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/axe"));
 
-	@Override
+	@SuppressWarnings("UnreachableCode")
+    @Override
 	public void onInitialize() {
 		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, NiftyCartsConfig.spec());
 
@@ -144,14 +137,17 @@ public class NiftyCarts implements ModInitializer {
 		Registry.register(BuiltInRegistries.SOUND_EVENT, DETACH_SOUND_ID, DETACH_SOUND);
 		Registry.register(BuiltInRegistries.SOUND_EVENT, PLACE_SOUND_ID, PLACE_SOUND);
 
-		ServerPlayNetworking.registerGlobalReceiver(ACTION_KEY_MESSAGE_ID, (server, player, handler, buf, responseSender) -> ActionKeyMessage.handle(null, player));
-		ServerPlayNetworking.registerGlobalReceiver(TOGGLE_SLOW_MESSAGE_ID, (server, player, handler, buf, responseSender) -> ToggleSlowMessage.handle(player));
-		ServerPlayNetworking.registerGlobalReceiver(OPEN_SUPPLY_MESSAGE_ID, (server, player, handler, buf, responseSender) -> OpenSupplyCartMessage.handle(player));
-		ServerPlayNetworking.registerGlobalReceiver(REQUEST_CART_UPDATE_MESSAGE_ID, (server, player, handler, buf, responseSender) -> {
-			RequestCartUpdate msg = new RequestCartUpdate();
-			msg.decode(buf);
-			RequestCartUpdate.handle(msg, player);
-		});
+		PayloadTypeRegistry.playC2S().register(ActionKeyPayload.TYPE, ActionKeyPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(OpenSupplyCartPayload.TYPE, OpenSupplyCartPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ToggleSlowPayload.TYPE, ToggleSlowPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(RequestCartUpdatePayload.TYPE, RequestCartUpdatePayload.CODEC);
+
+		PayloadTypeRegistry.playS2C().register(UpdateDrawnPayload.TYPE, UpdateDrawnPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(ActionKeyPayload.TYPE, (payload, context) -> ActionKeyPayload.handle(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(OpenSupplyCartPayload.TYPE, (payload, context) -> OpenSupplyCartPayload.handle(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(ToggleSlowPayload.TYPE, (payload, context) -> ToggleSlowPayload.handle(context.player()));
+		ServerPlayNetworking.registerGlobalReceiver(RequestCartUpdatePayload.TYPE, (payload, context) -> RequestCartUpdatePayload.handle(payload, context.player()));
 
 		ServerLifecycleEvents.SERVER_STARTED.register(s -> server = s);
 
@@ -161,7 +157,8 @@ public class NiftyCarts implements ModInitializer {
 			}
 		});
 
-		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
+        //noinspection DataFlowIssue
+        FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
 
 		UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			final Entity rider = entity.getControllingPassenger();
