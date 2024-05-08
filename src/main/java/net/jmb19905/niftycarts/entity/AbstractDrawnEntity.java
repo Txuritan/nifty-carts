@@ -1,6 +1,5 @@
 package net.jmb19905.niftycarts.entity;
 
-import com.mojang.datafixers.util.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.jmb19905.niftycarts.NiftyCarts;
@@ -10,7 +9,6 @@ import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.jmb19905.niftycarts.util.CartWheel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -49,8 +47,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BannerBlockEntity;
-import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -658,7 +654,7 @@ public abstract class AbstractDrawnEntity extends Entity {
             this.pullingUUID = compound.getUUID("PullingUUID");
         }
         if (compound.contains("BannerItem")) {
-            //this.setBanner(ItemStack.of(compound.getCompound("BannerItem")));
+            this.setBanner(ItemStack.parseOptional(this.registryAccess(), compound.getCompound("BannerItem")));
         }
     }
 
@@ -669,7 +665,7 @@ public abstract class AbstractDrawnEntity extends Entity {
         }
         final ItemStack banner = this.getBanner();
         if (!banner.isEmpty()) {
-            //compound.put("BannerItem", banner.save(new CompoundTag()));
+            compound.put("BannerItem", banner.saveOptional(this.registryAccess()));
         }
     }
 
