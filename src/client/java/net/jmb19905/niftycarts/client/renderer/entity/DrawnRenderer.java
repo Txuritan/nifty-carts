@@ -2,7 +2,6 @@ package net.jmb19905.niftycarts.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.jmb19905.niftycarts.client.mixin.ModelPartMixin;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
@@ -16,13 +15,10 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.core.Holder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -91,8 +87,7 @@ public abstract class DrawnRenderer<T extends AbstractDrawnEntity, M extends Ent
         this.flag.y = -26.0F;
         this.flag.z = 1.5F;
         float k = ((float)Math.floorMod((long)(entity.getX() * 7 + entity.getY() * 9 + entity.getZ() * 13) + entity.level().getGameTime(), 100L) + delta) / 100.0F;
-        this.flag.xRot = (-0.0125F + 0.01F * Mth.cos(Mth.TWO_PI * k)) * Mth.PI;
-        this.flag.xRot = 0;//TODO: Make Banners wave
+        this.flag.xRot = (0.01F * Mth.cos(Mth.TWO_PI * k)) * Mth.PI;
         BannerRenderer.renderPatterns(stack, source, packedLight, OverlayTexture.NO_OVERLAY, this.flag, ModelBakery.BANNER_BASE, true, color, banner);
         stack.popPose();
     }
