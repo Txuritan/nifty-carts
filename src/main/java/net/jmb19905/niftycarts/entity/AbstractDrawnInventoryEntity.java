@@ -3,7 +3,6 @@ package net.jmb19905.niftycarts.entity;
 import net.jmb19905.niftycarts.util.NCInventory;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -143,7 +142,7 @@ public abstract class AbstractDrawnInventoryEntity extends AbstractDrawnEntity i
         this.unpackChestVehicleLootTable(player);
     }
 
-    public ResourceKey<LootTable> getLootTable() {
+    public @Nullable ResourceKey<LootTable> getLootTable() {
         return this.lootTable;
     }
 

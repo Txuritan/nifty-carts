@@ -8,13 +8,14 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.NotNull;
 
 public record RequestCartUpdatePayload(int cartId) implements CustomPacketPayload {
 
     public static final Type<RequestCartUpdatePayload> TYPE = CustomPacketPayload.createType(NiftyCarts.MOD_ID + ":request_cart_update");
     public static final StreamCodec<FriendlyByteBuf, RequestCartUpdatePayload> CODEC = new StreamCodec<>() {
         @Override
-        public RequestCartUpdatePayload decode(FriendlyByteBuf buf) {
+        public @NotNull RequestCartUpdatePayload decode(FriendlyByteBuf buf) {
             return new RequestCartUpdatePayload(buf.readVarInt());
         }
 
@@ -25,7 +26,7 @@ public record RequestCartUpdatePayload(int cartId) implements CustomPacketPayloa
     };
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 

@@ -2,13 +2,13 @@ package net.jmb19905.niftycarts.network.serverbound;
 
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
-import net.jmb19905.niftycarts.network.Message;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -17,7 +17,7 @@ public record ToggleSlowPayload() implements CustomPacketPayload {
     public static final Type<ToggleSlowPayload> TYPE = CustomPacketPayload.createType(NiftyCarts.MOD_ID + ":toggle_slow");
     public static final StreamCodec<FriendlyByteBuf, ToggleSlowPayload> CODEC = new StreamCodec<>() {
         @Override
-        public ToggleSlowPayload decode(FriendlyByteBuf object) {
+        public @NotNull ToggleSlowPayload decode(FriendlyByteBuf object) {
             return new ToggleSlowPayload();
         }
 
@@ -27,7 +27,7 @@ public record ToggleSlowPayload() implements CustomPacketPayload {
     };
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 

@@ -2,19 +2,19 @@ package net.jmb19905.niftycarts.network.clientbound;
 
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
-import net.jmb19905.niftycarts.network.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 public record UpdateDrawnPayload(int pullingId, int cartId) implements CustomPacketPayload {
 
     public static final Type<UpdateDrawnPayload> TYPE = CustomPacketPayload.createType(NiftyCarts.MOD_ID + ":update_drawn");
-    public static final StreamCodec<FriendlyByteBuf, UpdateDrawnPayload> CODEC = new StreamCodec<FriendlyByteBuf, UpdateDrawnPayload>() {
+    public static final StreamCodec<FriendlyByteBuf, UpdateDrawnPayload> CODEC = new StreamCodec<>() {
         @Override
-        public UpdateDrawnPayload decode(FriendlyByteBuf buf) {
+        public @NotNull UpdateDrawnPayload decode(FriendlyByteBuf buf) {
             int pullingId = buf.readVarInt();
             int cartId = buf.readVarInt();
             return new UpdateDrawnPayload(pullingId, cartId);
@@ -28,7 +28,7 @@ public record UpdateDrawnPayload(int pullingId, int cartId) implements CustomPac
     };
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 

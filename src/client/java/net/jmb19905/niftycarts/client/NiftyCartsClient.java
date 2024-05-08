@@ -29,6 +29,8 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Objects;
+
 public class NiftyCartsClient implements ClientModInitializer {
 
 	private static KeyMapping actionKeyMapping;
@@ -38,9 +40,7 @@ public class NiftyCartsClient implements ClientModInitializer {
 		ForgeConfigRegistry.INSTANCE.register(NiftyCarts.MOD_ID, ModConfig.Type.CLIENT, NiftyCartsConfig.clientSpec());
 
 
-		ClientPlayNetworking.registerGlobalReceiver(UpdateDrawnPayload.TYPE, (payload, ctx) -> {
-            ctx.client().execute(() -> UpdateDrawnPayload.handle(payload, ctx.client().level));
-		});
+		ClientPlayNetworking.registerGlobalReceiver(UpdateDrawnPayload.TYPE, (payload, ctx) -> ctx.client().execute(() -> UpdateDrawnPayload.handle(payload, Objects.requireNonNull(ctx.client().level))));
 		EntityRendererRegistry.register(NiftyCarts.SUPPLY_CART_ENTITY, SupplyCartRenderer::new);
 		EntityRendererRegistry.register(NiftyCarts.ANIMAL_CART_ENTITY, AnimalCartRenderer::new);
 		EntityRendererRegistry.register(NiftyCarts.PLOW_ENTITY, PlowRenderer::new);

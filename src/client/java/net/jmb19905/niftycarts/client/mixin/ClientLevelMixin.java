@@ -1,8 +1,6 @@
 package net.jmb19905.niftycarts.client.mixin;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
 import net.jmb19905.niftycarts.network.serverbound.RequestCartUpdatePayload;
 import net.minecraft.client.multiplayer.ClientLevel;

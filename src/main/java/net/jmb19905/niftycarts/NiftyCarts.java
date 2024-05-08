@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.jmb19905.niftycarts.container.PlowMenu;
 import net.jmb19905.niftycarts.entity.AnimalCartEntity;
 import net.jmb19905.niftycarts.entity.PlowEntity;
@@ -68,28 +67,28 @@ public class NiftyCarts implements ModInitializer {
 	public static final EntityType<SupplyCartEntity> SUPPLY_CART_ENTITY = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "supply_cart"),
-			FabricEntityTypeBuilder.create(MobCategory.MISC, SupplyCartEntity::new).dimensions(EntityDimensions.fixed(1.5f, 1.4f)).build()
+			EntityType.Builder.of(SupplyCartEntity::new, MobCategory.MISC).sized(1.5f, 1.4f).build()
 	);
 
 	public static final EntityType<AnimalCartEntity> ANIMAL_CART_ENTITY = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "animal_cart"),
-			FabricEntityTypeBuilder.create(MobCategory.MISC, AnimalCartEntity::new).dimensions(EntityDimensions.fixed(1.3f, 1.4f)).build()
+			EntityType.Builder.of(AnimalCartEntity::new, MobCategory.MISC).sized(1.3f, 1.4f).build()
 	);
 
 	public static final EntityType<PlowEntity> PLOW_ENTITY = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "plow"),
-			FabricEntityTypeBuilder.create(MobCategory.MISC, PlowEntity::new).dimensions(EntityDimensions.fixed(1.3f, 1.4f)).build()
+			EntityType.Builder.of(PlowEntity::new, MobCategory.MISC).sized(1.3f, 1.4f).build()
 	);
 
 	public static final EntityType<PostilionEntity> POSTILION_ENTITY = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "postilion"),
-			FabricEntityTypeBuilder.create(MobCategory.MISC, PostilionEntity::new)
-					.dimensions(EntityDimensions.fixed(0.25f, 0.25f))
-					.disableSummon()
-					.disableSaving()
+			EntityType.Builder.of(PostilionEntity::new, MobCategory.MISC)
+					.sized(0.25f, 0.25f)
+					.noSummon()
+					.noSave()
 					.build()
 	);
 

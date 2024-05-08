@@ -2,28 +2,29 @@ package net.jmb19905.niftycarts.network.serverbound;
 
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.SupplyCartEntity;
-import net.jmb19905.niftycarts.network.Message;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.NotNull;
 
 public record OpenSupplyCartPayload() implements CustomPacketPayload {
 
     public static final Type<OpenSupplyCartPayload> TYPE = CustomPacketPayload.createType(NiftyCarts.MOD_ID + ":open_supply_cart");
-    public static final StreamCodec<FriendlyByteBuf, OpenSupplyCartPayload> CODEC = new StreamCodec<FriendlyByteBuf, OpenSupplyCartPayload>() {
+    public static final StreamCodec<FriendlyByteBuf, OpenSupplyCartPayload> CODEC = new StreamCodec<>() {
         @Override
-        public OpenSupplyCartPayload decode(FriendlyByteBuf object) {
+        public @NotNull OpenSupplyCartPayload decode(FriendlyByteBuf object) {
             return new OpenSupplyCartPayload();
         }
 
         @Override
-        public void encode(FriendlyByteBuf object, OpenSupplyCartPayload object2) {}
+        public void encode(FriendlyByteBuf object, OpenSupplyCartPayload object2) {
+        }
     };
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
