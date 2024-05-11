@@ -16,15 +16,15 @@ public class DummyLivingEntity extends LivingEntity {
 
     protected DummyLivingEntity(final EntityType<? extends LivingEntity> type, final Level world) {
         super(type, world);
+        this.setSilent(true);
+        this.setNoGravity(true);
+        this.setInvulnerable(true);
+        this.setInvisible(true);
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        this.setSilent(true);
-        this.setNoGravity(true);
-        this.setInvulnerable(true);
-        this.setInvisible(true);
     }
 
     @Override
@@ -64,11 +64,6 @@ public class DummyLivingEntity extends LivingEntity {
 
     @Override
     public boolean isEffectiveAi() {
-        return false;
-    }
-
-    @Override
-    public boolean canBeCollidedWith() {
         return false;
     }
 

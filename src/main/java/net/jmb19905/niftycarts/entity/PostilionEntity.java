@@ -12,11 +12,6 @@ public class PostilionEntity extends DummyLivingEntity {
         super(type, world);
     }
 
-    //@Override
-    //public float getMyRidingOffset(Entity entity) {
-    //    return 0.125f;
-    //}
-
     @Override
     public void tick() {
         super.tick();
