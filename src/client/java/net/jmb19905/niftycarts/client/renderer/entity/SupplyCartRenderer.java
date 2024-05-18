@@ -7,6 +7,7 @@ import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.jmb19905.niftycarts.NiftyCartsConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -56,7 +57,7 @@ import java.util.stream.StreamSupport;
 public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, SupplyCartModel> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(NiftyCarts.MOD_ID, "textures/entity/supply_cart.png");
 
-    // access to use the forge code for armor texture which is an instance method for some reason
+    // access to use the forge code for armorItem texture which is an instance method for some reason
     private static final HumanoidArmorLayer<LivingEntity, HumanoidModel<LivingEntity>, HumanoidModel<LivingEntity>> DUMMY = new HumanoidArmorLayer<>(null, null, null, Minecraft.getInstance().getModelManager());
 
     private final HumanoidModel<LivingEntity> leggings, armor;
@@ -87,11 +88,18 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
         while (contents != Contents.SUPPLIES && it.hasNext()) {
             final ItemStack s = it.next();
             if (s.isEmpty()) continue;
-            if (!contents.predicate.test(s)) contents = Contents.SUPPLIES;
+            if (!contents.predicate.test(s)) {
+                contents = Contents.SUPPLIES;
+                if (!contents.predicate.test(s)) {
+                    contents = Contents.NONE;
+                }
+            }
         }
         stack.pushPose();
         this.model.getBody().translateAndRotate(stack);
-        contents.renderer.render(this, entity, stack, source, packedLight, cargo);
+        if (contents.renderer != null) {
+            contents.renderer.render(this, entity, stack, source, packedLight, cargo);
+        }
         final List<Pair<Holder<BannerPattern>, DyeColor>> list = entity.getBannerPattern();
         if (!list.isEmpty()) {
             stack.translate(0.0D, -0.6D, 1.5D);
@@ -176,7 +184,7 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
             final double z = (iz * 11.0D - 9.0D) / 16.0D;
             final BakedModel model = renderer.getModel(itemStack, entity.level, null, i);
             stack.pushPose();
-            if (model.isGui3d() && itemStack.getItem() != Items.TRIDENT) {
+            if (model.isGui3d() && itemStack.getItem() != Items.TRIDENT && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
                 stack.translate(x, -0.46D, z);
                 stack.scale(0.65F, 0.65F, 0.65F);
                 stack.mulPose(Axis.ZP.rotationDegrees(180.0F));
@@ -194,8 +202,8 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
             } else {
                 rng.setSeed(32L * i + Objects.hashCode(BuiltInRegistries.ITEM.getKey(itemStack.getItem())));
                 stack.translate(x, -0.15D + ((ix + iz) % 2 == 0 ? 0.0D : 1.0e-4D), z);
-                if (ArmorItem.class.equals(itemStack.getItem().getClass()) || DyeableArmorItem.class.equals(itemStack.getItem().getClass())) {
-                    this.renderArmor(entity, stack, source, packedLight, itemStack, ix);
+                if ((ArmorItem.class.equals(itemStack.getItem().getClass()) || DyeableArmorItem.class.equals(itemStack.getItem().getClass())) && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
+                    this.renderArmor(stack, source, packedLight, itemStack, ix);
                 } else {
                     stack.scale(0.7F, 0.7F, 0.7F);
                     stack.mulPose(Axis.YP.rotation(rng.nextFloat() * (float) Math.PI));
@@ -215,9 +223,9 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
         }
     }
 
-    private void renderArmor(final SupplyCartEntity entity, final PoseStack stack, final MultiBufferSource source, final int packedLight, final ItemStack itemStack, final int ix) {
+    private void renderArmor(final PoseStack stack, final MultiBufferSource source, final int packedLight, final ItemStack itemStack, final int ix) {
         final Item item = itemStack.getItem();
-        if (!(item instanceof final ArmorItem armor)) return;
+        if (!(item instanceof final ArmorItem armorItem)) return;
         final EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(itemStack);
         final HumanoidModel<LivingEntity> m = slot == EquipmentSlot.LEGS ? this.leggings : this.armor;
         stack.mulPose(Axis.YP.rotation(ix == 0 ? (float) Math.PI * 0.5F : (float) -Math.PI * 0.5F));
@@ -271,8 +279,8 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
                 false,
                 itemStack.hasFoil()
         );
-        if (armor instanceof DyeableArmorItem) {
-            final int rgb = ((DyeableArmorItem) armor).getColor(itemStack);
+        if (armorItem instanceof DyeableArmorItem) {
+            final int rgb = ((DyeableArmorItem) armorItem).getColor(itemStack);
             final float r = (float) (rgb >> 16 & 255) / 255.0F;
             final float g = (float) (rgb >> 8 & 255) / 255.0F;
             final float b = (float) (rgb & 255) / 255.0F;
@@ -361,15 +369,16 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
     }
 
     private enum Contents {
-        FLOWERS(s -> s.getItem() instanceof BlockItem && s.is(ItemTags.FLOWERS), SupplyCartRenderer::renderFlowers),
-        PAINTINGS(s -> s.getItem() == Items.PAINTING, SupplyCartRenderer::renderPaintings),
-        WHEEL(s -> s.getItem() == NiftyCarts.WHEEL, SupplyCartRenderer::renderWheel),
-        SUPPLIES(s -> true, SupplyCartRenderer::renderSupplies);
+        FLOWERS(s -> s.getItem() instanceof BlockItem && s.is(ItemTags.FLOWERS) && NiftyCartsConfig.getClient().renderSupplyFlowers.get(), SupplyCartRenderer::renderFlowers),
+        PAINTINGS(s -> s.getItem() == Items.PAINTING && NiftyCartsConfig.getClient().renderSupplyPaintings.get(), SupplyCartRenderer::renderPaintings),
+        WHEEL(s -> s.getItem() == NiftyCarts.WHEEL && NiftyCartsConfig.getClient().renderSupplyWheel.get(), SupplyCartRenderer::renderWheel),
+        SUPPLIES(s -> NiftyCartsConfig.getClient().renderSupplies.get(), SupplyCartRenderer::renderSupplies),
+        NONE(s -> false, null);
 
         private final Predicate<? super ItemStack> predicate;
         private final ContentsRenderer renderer;
 
-        Contents(final Predicate<? super ItemStack> predicate, final ContentsRenderer renderer) {
+        Contents(final Predicate<? super ItemStack> predicate, @Nullable final ContentsRenderer renderer) {
             this.predicate = predicate;
             this.renderer = renderer;
         }

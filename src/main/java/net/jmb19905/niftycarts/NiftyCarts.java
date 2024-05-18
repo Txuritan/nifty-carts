@@ -116,6 +116,7 @@ public class NiftyCarts implements ModInitializer {
     @Override
 	public void onInitialize() {
 		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, NiftyCartsConfig.spec());
+		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.CLIENT, NiftyCartsConfig.clientSpec());
 
 		Registry.register(BuiltInRegistries.CUSTOM_STAT, CART_ONE_CM, CART_ONE_CM);
 		Stats.CUSTOM.get(CART_ONE_CM, StatFormatter.DEFAULT);
