@@ -22,7 +22,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Additional Information:**
- - Version [e.g. 3.0.2+1.20.1]
+ - Version [Mod version e.g. 3.0.2+1.20.1]
  - other Mods
  - only in Multiplayer
  - ...
