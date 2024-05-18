@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractHorse.class)
 public class AbstractHorseMixin {
 
+    @SuppressWarnings("UnreachableCode")
     @Inject(method = "getControllingPassenger", at = @At("HEAD"), cancellable = true)
     public void getControllingPassenger(CallbackInfoReturnable<LivingEntity> cir) {
         Entity entity = ((AbstractHorse) (Object)this).getFirstPassenger();

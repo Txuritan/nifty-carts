@@ -112,7 +112,8 @@ public class NiftyCarts implements ModInitializer {
 
 	public static final ResourceLocation CART_ONE_CM = new ResourceLocation(MOD_ID, "cart_one_cm");
 
-	@Override
+	@SuppressWarnings("UnreachableCode")
+    @Override
 	public void onInitialize() {
 		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, NiftyCartsConfig.spec());
 
@@ -154,9 +155,10 @@ public class NiftyCarts implements ModInitializer {
 			}
 		});
 
-		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes().build());
+        //noinspection DataFlowIssue
+        FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes().build());
 
-		UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
+        UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			final Entity rider = entity.getControllingPassenger();
 			if (rider instanceof PostilionEntity) {
 				rider.stopRiding();
