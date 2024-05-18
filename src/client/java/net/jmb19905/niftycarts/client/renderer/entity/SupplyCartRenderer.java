@@ -18,7 +18,6 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.PaintingTextureManager;
@@ -56,10 +55,6 @@ import java.util.stream.StreamSupport;
 
 public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, SupplyCartModel> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(NiftyCarts.MOD_ID, "textures/entity/supply_cart.png");
-
-    // access to use the forge code for armor texture which is an instance method for some reason
-    private static final HumanoidArmorLayer<LivingEntity, HumanoidModel<LivingEntity>, HumanoidModel<LivingEntity>> DUMMY = new HumanoidArmorLayer<>(null, null, null, Minecraft.getInstance().getModelManager());
-
     private final HumanoidModel<LivingEntity> leggings, armor;
 
     public SupplyCartRenderer(final EntityRendererProvider.Context renderManager) {
@@ -203,7 +198,7 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
                 rng.setSeed(32L * i + Objects.hashCode(BuiltInRegistries.ITEM.getKey(itemStack.getItem())));
                 stack.translate(x, -0.15D + ((ix + iz) % 2 == 0 ? 0.0D : 1.0e-4D), z);
                 if ((ArmorItem.class.equals(itemStack.getItem().getClass()) || DyeableArmorItem.class.equals(itemStack.getItem().getClass())) && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
-                    this.renderArmor(entity, stack, source, packedLight, itemStack, ix);
+                    this.renderArmor(stack, source, packedLight, itemStack, ix);
                 } else {
                     stack.scale(0.7F, 0.7F, 0.7F);
                     stack.mulPose(Axis.YP.rotation(rng.nextFloat() * (float) Math.PI));
@@ -223,9 +218,9 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
         }
     }
 
-    private void renderArmor(final SupplyCartEntity entity, final PoseStack stack, final MultiBufferSource source, final int packedLight, final ItemStack itemStack, final int ix) {
+    private void renderArmor(final PoseStack stack, final MultiBufferSource source, final int packedLight, final ItemStack itemStack, final int ix) {
         final Item item = itemStack.getItem();
-        if (!(item instanceof final ArmorItem armor)) return;
+        if (!(item instanceof final ArmorItem armorItem)) return;
         final EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(itemStack);
         final HumanoidModel<LivingEntity> m = slot == EquipmentSlot.LEGS ? this.leggings : this.armor;
         stack.mulPose(Axis.YP.rotation(ix == 0 ? (float) Math.PI * 0.5F : (float) -Math.PI * 0.5F));
@@ -279,8 +274,8 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
                 false,
                 itemStack.hasFoil()
         );
-        if (armor instanceof DyeableArmorItem) {
-            final int rgb = ((DyeableArmorItem) armor).getColor(itemStack);
+        if (armorItem instanceof DyeableArmorItem) {
+            final int rgb = ((DyeableArmorItem) armorItem).getColor(itemStack);
             final float r = (float) (rgb >> 16 & 255) / 255.0F;
             final float g = (float) (rgb >> 8 & 255) / 255.0F;
             final float b = (float) (rgb & 255) / 255.0F;
@@ -297,7 +292,13 @@ public final class SupplyCartRenderer extends DrawnRenderer<SupplyCartEntity, Su
     }
     public ResourceLocation getArmorResource(ItemStack stack, EquipmentSlot slot, @Nullable String type) {
         ArmorItem item = (ArmorItem)stack.getItem();
-        return DUMMY.getArmorLocation(item, DUMMY.usesInnerModel(slot), type);
+        return getArmorLocation(item, slot == EquipmentSlot.LEGS, type);
+    }
+
+    private ResourceLocation getArmorLocation(ArmorItem armorItem, boolean bl, @Nullable String string) {
+        String var10000 = armorItem.getMaterial().getName();
+        String string2 = "textures/models/armor/" + var10000 + "_layer_" + (bl ? 2 : 1) + (string == null ? "" : "_" + string) + ".png";
+        return new ResourceLocation(string2);
     }
 
     private void renderPainting(final PaintingVariant painting, final PoseStack stack, final VertexConsumer buf, final int packedLight) {
