@@ -46,13 +46,13 @@ public abstract class AbstractHorseMixin extends LivingEntity {
     @Override
     public void travel(Vec3 vec3) {
         var living = ((AbstractHorse) (Object) this).getControllingPassenger();
-        if (living != null) {
-            float f = living.xxa * 0.5f;
-            float g = living.zza;
-            if (g <= 0.0f) {
-                g *= 0.25f;
+        if (living instanceof PostilionEntity) {
+            float xxa = living.xxa * 0.5f;
+            float zza = living.zza;
+            if (zza <= 0.0f) {
+                zza *= 0.25f;
             }
-            Vec3 vec32 = new Vec3(f, 0.0, g);
+            Vec3 vec32 = new Vec3(xxa, 0.0, zza);
             this.customTickRidden(living, vec32);
             this.setSpeed((float)this.getAttributeValue(Attributes.MOVEMENT_SPEED));
             super.travel(vec32);

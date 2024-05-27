@@ -51,7 +51,6 @@ public class AvoidCartGoal<T extends AbstractDrawnEntity>
         this(pathfinderMob, class_, livingEntity -> true, f, d, predicate);
     }
 
-    @SuppressWarnings("resource")
     @Override
     public boolean canUse() {
         List<? extends AbstractDrawnEntity> entityList = this.mob.level().getEntitiesOfClass(this.avoidClass, this.mob.getBoundingBox().inflate(this.maxDist, 3.0, this.maxDist), entity -> true);
