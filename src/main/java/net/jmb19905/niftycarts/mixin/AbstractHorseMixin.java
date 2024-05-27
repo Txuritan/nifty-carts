@@ -42,10 +42,11 @@ public abstract class AbstractHorseMixin extends LivingEntity {
         }
     }
 
+    @SuppressWarnings("UnreachableCode")
     @Override
     public void travel(Vec3 vec3) {
         var living = ((AbstractHorse) (Object) this).getControllingPassenger();
-        if (living != null) {
+        if (living instanceof PostilionEntity) {
             float f = living.xxa * 0.5f;
             float g = living.zza;
             if (g <= 0.0f) {
