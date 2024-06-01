@@ -24,7 +24,6 @@ import net.jmb19905.niftycarts.network.serverbound.ActionKeyPayload;
 import net.jmb19905.niftycarts.network.serverbound.ToggleSlowPayload;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.glfw.GLFW;
@@ -34,6 +33,7 @@ import java.util.Objects;
 public class NiftyCartsClient implements ClientModInitializer {
 
 	private static KeyMapping actionKeyMapping;
+	private static KeyMapping toggleSlowMapping;
 
 	@Override
 	public void onInitializeClient() {
@@ -53,9 +53,16 @@ public class NiftyCartsClient implements ClientModInitializer {
 		MenuScreens.register(NiftyCarts.PLOW_MENU_TYPE, PlowScreen::new);
 
 		actionKeyMapping = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-				"key.niftycarts.desc",
+				"key.niftycarts.action",
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_R,
+				"key.categories.niftycarts"
+		));
+
+		toggleSlowMapping = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+				"key.niftycarts.slow",
+				InputConstants.Type.KEYSYM,
+				GLFW.GLFW_KEY_Z,
 				"key.categories.niftycarts"
 		));
 
@@ -63,13 +70,11 @@ public class NiftyCartsClient implements ClientModInitializer {
 			while (actionKeyMapping.consumeClick()) {
 				ClientPlayNetworking.send(new ActionKeyPayload());
 			}
-			var mc = Minecraft.getInstance();
 			var player = client.player;
 			if (player != null && ToggleSlowPayload.getCart(player).isPresent()) {
-				final var binding = mc.options.keySprint;
-				while (binding.consumeClick()) {
+				while (toggleSlowMapping.consumeClick()) {
 					ClientPlayNetworking.send(new ToggleSlowPayload());
-					KeyMapping.set(binding.getDefaultKey(), false);
+					KeyMapping.set(toggleSlowMapping.getDefaultKey(), false);
 				}
 			}
 			if (!client.isPaused() && client.level != null) {

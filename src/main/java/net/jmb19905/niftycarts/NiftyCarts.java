@@ -110,8 +110,7 @@ public class NiftyCarts implements ModInitializer {
 	public static final TagKey<Block> PLOW_BREAKABLE_SHOVEL = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/shovel"));
 	public static final TagKey<Block> PLOW_BREAKABLE_AXE = TagKey.create(Registries.BLOCK, new ResourceLocation(NiftyCarts.MOD_ID, "plow_breakable/axe"));
 
-	@SuppressWarnings("UnreachableCode")
-    @Override
+	@Override
 	public void onInitialize() {
 		ForgeConfigRegistry.INSTANCE.register(MOD_ID, ModConfig.Type.COMMON, NiftyCartsConfig.spec());
 
@@ -156,9 +155,6 @@ public class NiftyCarts implements ModInitializer {
 			}
 		});
 
-        //noinspection DataFlowIssue
-        FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
-
 		UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			final Entity rider = entity.getControllingPassenger();
 			if (rider instanceof PostilionEntity) {
@@ -171,5 +167,8 @@ public class NiftyCarts implements ModInitializer {
 			MOB_GOAL_ADDER.onEntityJoinWorld(entity);
 			PATHFINDER_GOAL_ADDER.onEntityJoinWorld(entity);
 		});
+
+		//noinspection DataFlowIssue
+		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
 	}
 }
