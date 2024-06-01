@@ -2,12 +2,12 @@ package net.jmb19905.niftycarts.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import net.jmb19905.niftycarts.NiftyCarts;
+import net.jmb19905.niftycarts.NiftyCartsConfig;
 import net.jmb19905.niftycarts.client.renderer.NiftyCartsModelLayers;
 import net.jmb19905.niftycarts.client.renderer.entity.model.HandCartModel;
 import net.jmb19905.niftycarts.entity.HandCartEntity;
@@ -17,31 +17,33 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.Holder;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.decoration.PaintingVariant;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.block.entity.BannerPattern;
+import net.minecraft.world.item.armortrim.ArmorTrim;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Predicate;
@@ -51,13 +53,14 @@ import java.util.stream.StreamSupport;
 public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartModel> {
     //This texture is not a real file it is assembled during resource loading
     private static final ResourceLocation TEXTURE = new ResourceLocation(NiftyCarts.MOD_ID, "textures/entity/hand_cart.png");
-    private static final HumanoidArmorLayer<LivingEntity, HumanoidModel<LivingEntity>, HumanoidModel<LivingEntity>> DUMMY = new HumanoidArmorLayer<>(null, null, null, Minecraft.getInstance().getModelManager());
     private final HumanoidModel<LivingEntity> leggings, armor;
+    private final TextureAtlas armorTrimAtlas;
 
     public HandCartRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new HandCartModel(renderManager.bakeLayer(NiftyCartsModelLayers.HAND_CART)));
         this.leggings = new HumanoidModel<>(renderManager.bakeLayer(ModelLayers.PLAYER_INNER_ARMOR));
         this.armor = new HumanoidModel<>(renderManager.bakeLayer(ModelLayers.PLAYER_OUTER_ARMOR));
+        this.armorTrimAtlas = renderManager.getModelManager().getAtlas(Sheets.ARMOR_TRIMS_SHEET);
         this.shadowRadius = 1.0F;
     }
 
@@ -80,15 +83,17 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
         while (contents != HandCartRenderer.Contents.SUPPLIES && it.hasNext()) {
             final ItemStack s = it.next();
             if (s.isEmpty()) continue;
-            if (!contents.predicate.test(s)) contents = HandCartRenderer.Contents.SUPPLIES;
+            if (!contents.predicate.test(s)) {
+                contents = HandCartRenderer.Contents.SUPPLIES;
+                if (!contents.predicate.test(s)) {
+                    contents = HandCartRenderer.Contents.NONE;
+                }
+            }
         }
         stack.pushPose();
         this.model.getBody().translateAndRotate(stack);
-        contents.renderer.render(this, entity, stack, source, packedLight, cargo);
-        final List<Pair<Holder<BannerPattern>, DyeColor>> list = entity.getBannerPattern();
-        if (!list.isEmpty()) {
-            stack.translate(0.0D, -0.6D, 1.5D);
-            this.renderBanner(stack, source, packedLight, list);
+        if (contents.renderer != null) {
+            contents.renderer.render(this, entity, stack, source, packedLight, cargo);
         }
         stack.popPose();
     }
@@ -164,7 +169,7 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
             final double z = ((iz * 2 - 1) * 5) / 16.0D;
             final BakedModel model = renderer.getModel(itemStack, entity.level(), null, i);
             stack.pushPose();
-            if (model.isGui3d() && itemStack.getItem() != Items.TRIDENT) {
+            if (model.isGui3d() && itemStack.getItem() != Items.TRIDENT && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
                 stack.translate(x, -0.46D, z);
                 stack.scale(0.5F, 0.5F, 0.5F);
                 stack.mulPose(Axis.ZP.rotationDegrees(180.0F));
@@ -182,7 +187,7 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
             } else {
                 rng.setSeed(32L * i + Objects.hashCode(BuiltInRegistries.ITEM.getKey(itemStack.getItem())));
                 stack.translate(x, -0.15D + ((ix + iz) % 2 == 0 ? 0.0D : 1.0e-4D), z);
-                if (ArmorItem.class.equals(itemStack.getItem().getClass()) || DyeableArmorItem.class.equals(itemStack.getItem().getClass())) {
+                if (ArmorItem.class.equals(itemStack.getItem().getClass()) && NiftyCartsConfig.getClient().renderSupplyGear.get()) {
                     stack.scale(0.9f, 0.9f, 0.9f);
                     this.renderArmor(stack, source, packedLight, itemStack, ix);
                 } else {
@@ -206,7 +211,7 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
 
     private void renderArmor(final PoseStack stack, final MultiBufferSource source, final int packedLight, final ItemStack itemStack, final int ix) {
         final Item item = itemStack.getItem();
-        if (!(item instanceof final ArmorItem armor_)) return;
+        if (!(item instanceof final ArmorItem armorItem)) return;
         final EquipmentSlot slot = LivingEntity.getEquipmentSlotForItem(itemStack);
         final HumanoidModel<LivingEntity> m = slot == EquipmentSlot.LEGS ? this.leggings : this.armor;
         stack.mulPose(Axis.YP.rotation(ix == 0 ? (float) Math.PI * 0.5F : (float) -Math.PI * 0.5F));
@@ -255,30 +260,46 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
             }
         }
         stack.scale(0.75F, 0.75F, 0.75F);
-        final VertexConsumer armorBuf = ItemRenderer.getArmorFoilBuffer(source,
-                RenderType.armorCutoutNoCull(getArmorResource(itemStack, slot, null)),
-                false,
-                itemStack.hasFoil()
-        );
-        if (armor_ instanceof DyeableArmorItem) {
-            final int rgb = ((DyeableArmorItem) armor_).getColor(itemStack);
-            final float r = (float) (rgb >> 16 & 255) / 255.0F;
-            final float g = (float) (rgb >> 8 & 255) / 255.0F;
-            final float b = (float) (rgb & 255) / 255.0F;
-            m.renderToBuffer(stack, armorBuf, packedLight, OverlayTexture.NO_OVERLAY, r, g, b, 1.0F);
-            final VertexConsumer overlayBuf = ItemRenderer.getArmorFoilBuffer(source,
-                    RenderType.armorCutoutNoCull(getArmorResource(itemStack, slot, "overlay")),
+
+        ArmorMaterial material = armorItem.getMaterial().value();
+
+        final int rgb = itemStack.is(ItemTags.DYEABLE) ? DyedItemColor.getOrDefault(itemStack, -6265536) : -1;
+
+        boolean usesInnerModel = slot == EquipmentSlot.LEGS;
+
+        ArmorMaterial.Layer layer;
+        float r;
+        float g;
+        float b;
+        VertexConsumer armor;
+        for(Iterator<ArmorMaterial.Layer> it = material.layers().iterator(); it.hasNext(); m.renderToBuffer(stack, armor, packedLight, OverlayTexture.NO_OVERLAY, r, g, b, 1.0F)) {
+            layer = it.next();
+            armor = ItemRenderer.getArmorFoilBuffer(source,
+                    RenderType.armorCutoutNoCull(layer.texture(usesInnerModel)),
                     false,
                     itemStack.hasFoil()
             );
-            m.renderToBuffer(stack, overlayBuf, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-        } else {
-            m.renderToBuffer(stack, armorBuf, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            if (layer.dyeable() && rgb != -1) {
+                r = (float) FastColor.ARGB32.red(rgb) / 255.0F;
+                g = (float) FastColor.ARGB32.green(rgb) / 255.0F;
+                b = (float) FastColor.ARGB32.blue(rgb) / 255.0F;
+            } else {
+                r = 1.0F;
+                g = 1.0F;
+                b = 1.0F;
+            }
         }
-    }
-    public ResourceLocation getArmorResource(ItemStack stack, EquipmentSlot slot, @Nullable String type) {
-        ArmorItem item = (ArmorItem)stack.getItem();
-        return DUMMY.getArmorLocation(item, DUMMY.usesInnerModel(slot), type);
+
+        ArmorTrim armorTrim = itemStack.get(DataComponents.TRIM);
+        if (armorTrim != null) {
+            TextureAtlasSprite textureAtlasSprite = this.armorTrimAtlas.getSprite(usesInnerModel ? armorTrim.innerTexture(armorItem.getMaterial()) : armorTrim.outerTexture(armorItem.getMaterial()));
+            VertexConsumer vertexConsumer = textureAtlasSprite.wrap(source.getBuffer(Sheets.armorTrimsSheet(armorTrim.pattern().value().decal())));
+            m.renderToBuffer(stack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
+        if (itemStack.hasFoil()) {
+            m.renderToBuffer(stack, source.getBuffer(RenderType.armorEntityGlint()), packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        }
     }
 
     @Override
@@ -287,10 +308,11 @@ public class HandCartRenderer extends DrawnRenderer<HandCartEntity, HandCartMode
     }
 
     private enum Contents {
-        FLOWERS(s -> s.getItem() instanceof BlockItem && s.is(ItemTags.FLOWERS), HandCartRenderer::renderFlowers),
-        PAINTINGS(s -> s.getItem() == Items.PAINTING, HandCartRenderer::renderPaintings),
-        WHEEL(s -> s.getItem() == NiftyCarts.WHEEL, HandCartRenderer::renderWheel),
-        SUPPLIES(s -> true, HandCartRenderer::renderSupplies);
+        FLOWERS(s -> s.getItem() instanceof BlockItem && s.is(ItemTags.FLOWERS) && NiftyCartsConfig.getClient().renderSupplyFlowers.get(), HandCartRenderer::renderFlowers),
+        PAINTINGS(s -> s.getItem() == Items.PAINTING && NiftyCartsConfig.getClient().renderSupplyPaintings.get(), HandCartRenderer::renderPaintings),
+        WHEEL(s -> s.getItem() == NiftyCarts.WHEEL && NiftyCartsConfig.getClient().renderSupplyWheel.get(), HandCartRenderer::renderWheel),
+        SUPPLIES(s -> NiftyCartsConfig.getClient().renderSupplies.get(), HandCartRenderer::renderSupplies),
+        NONE(s -> true, null);
 
         private final Predicate<? super ItemStack> predicate;
         private final ContentsRenderer renderer;

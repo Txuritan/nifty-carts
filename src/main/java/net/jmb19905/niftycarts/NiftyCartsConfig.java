@@ -72,7 +72,7 @@ public final class NiftyCartsConfig {
             this.plow = new CartConfig(builder, "plow", "The Plow, an animal pulled machine for tilling soil and creating paths");
             ArrayList<String> list = new ArrayList<>();
             list.add("minecraft:player");
-            this.handCart = new CartConfig(builder, "handCart", "The Hand Cart, a player pulled cart that stores items", list, -0.3);
+            this.handCart = new CartConfig(builder, "handCart", "The Hand Cart, a player pulled cart that stores items", list, 0);
             builder.pop();
         }
     }

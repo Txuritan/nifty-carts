@@ -83,7 +83,7 @@ public class NiftyCarts implements ModInitializer {
 	public static final EntityType<HandCartEntity> HAND_CART_ENTITY = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "hand_cart"),
-			FabricEntityTypeBuilder.create(MobCategory.MISC, HandCartEntity::new).dimensions(EntityDimensions.fixed(1.3f, 1.1f)).build()
+			EntityType.Builder.of(HandCartEntity::new, MobCategory.MISC).sized(1.3f, 1.1f).build()
 	);
 
 	public static final EntityType<PostilionEntity> POSTILION_ENTITY = Registry.register(

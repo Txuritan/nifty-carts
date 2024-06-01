@@ -401,11 +401,12 @@ public abstract class AbstractDrawnEntity extends Entity {
     }
 
     private boolean canPull(final Entity entity) {
+        if (entity instanceof Saddleable && !((Saddleable) entity).isSaddleable()) return false;
+        if (entity instanceof TamableAnimal && !((TamableAnimal) entity).isTame()) return false;
         final ArrayList<String> allowed = this.getConfig().pullEntities.get();
         if (allowed.isEmpty()) {
-            if (entity instanceof Saddleable && !((Saddleable) entity).isSaddleable()) return false;
-            if (entity instanceof TamableAnimal && !((TamableAnimal) entity).isTame()) return false;
-            return entity instanceof Saddleable && !(entity instanceof ItemSteerable);
+            return entity instanceof Player ||
+                    entity instanceof Saddleable && !(entity instanceof ItemSteerable);
         }
         return allowed.contains(EntityType.getKey(entity.getType()).toString());
     }
