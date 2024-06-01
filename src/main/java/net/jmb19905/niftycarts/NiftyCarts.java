@@ -11,10 +11,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.jmb19905.niftycarts.container.PlowMenu;
-import net.jmb19905.niftycarts.entity.AnimalCartEntity;
-import net.jmb19905.niftycarts.entity.PlowEntity;
-import net.jmb19905.niftycarts.entity.PostilionEntity;
-import net.jmb19905.niftycarts.entity.SupplyCartEntity;
+import net.jmb19905.niftycarts.entity.*;
 import net.jmb19905.niftycarts.entity.ai.goal.AvoidCartGoal;
 import net.jmb19905.niftycarts.entity.ai.goal.PullCartGoal;
 import net.jmb19905.niftycarts.entity.ai.goal.RideCartGoal;
@@ -51,6 +48,7 @@ public class NiftyCarts implements ModInitializer {
 	public static final Item WHEEL = new Item(new Item.Properties());
 	private static final Supplier<CartItem> CART_ITEM_SUPPLIER = () -> new CartItem(new Item.Properties().stacksTo(1));
 	public static final CartItem SUPPLY_CART = CART_ITEM_SUPPLIER.get();
+	public static final CartItem HAND_CART = CART_ITEM_SUPPLIER.get();
 	public static final CartItem PLOW = CART_ITEM_SUPPLIER.get();
 	public static final CartItem ANIMAL_CART = CART_ITEM_SUPPLIER.get();
 
@@ -80,6 +78,12 @@ public class NiftyCarts implements ModInitializer {
 			BuiltInRegistries.ENTITY_TYPE,
 			new ResourceLocation(MOD_ID, "plow"),
 			EntityType.Builder.of(PlowEntity::new, MobCategory.MISC).sized(1.3f, 1.4f).build()
+	);
+
+	public static final EntityType<HandCartEntity> HAND_CART_ENTITY = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			new ResourceLocation(MOD_ID, "hand_cart"),
+			FabricEntityTypeBuilder.create(MobCategory.MISC, HandCartEntity::new).dimensions(EntityDimensions.fixed(1.3f, 1.1f)).build()
 	);
 
 	public static final EntityType<PostilionEntity> POSTILION_ENTITY = Registry.register(
@@ -121,6 +125,7 @@ public class NiftyCarts implements ModInitializer {
 		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, "supply_cart"), SUPPLY_CART);
 		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, "plow"), PLOW);
 		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, "animal_cart"), ANIMAL_CART);
+		Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, "hand_cart"), HAND_CART);
 
 		Registry.register(BuiltInRegistries.MENU, new ResourceLocation(MOD_ID, "plow"), PLOW_MENU_TYPE);
 
@@ -129,6 +134,7 @@ public class NiftyCarts implements ModInitializer {
 			content.accept(SUPPLY_CART);
 			content.accept(PLOW);
 			content.accept(ANIMAL_CART);
+			content.accept(HAND_CART);
 		});
 
 		Registry.register(BuiltInRegistries.SOUND_EVENT, ATTACH_SOUND_ID, ATTACH_SOUND);
