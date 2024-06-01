@@ -161,9 +161,7 @@ public class NiftyCarts implements ModInitializer {
 			}
 		});
 
-		FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes().build());
-
-		UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
+        UseEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
 			final Entity rider = entity.getControllingPassenger();
 			if (rider instanceof PostilionEntity) {
 				rider.stopRiding();
@@ -175,5 +173,8 @@ public class NiftyCarts implements ModInitializer {
 			MOB_GOAL_ADDER.onEntityJoinWorld(entity);
 			PATHFINDER_GOAL_ADDER.onEntityJoinWorld(entity);
 		});
+
+        //noinspection DataFlowIssue
+        FabricDefaultAttributeRegistry.register(POSTILION_ENTITY, LivingEntity.createLivingAttributes());
 	}
 }

@@ -25,7 +25,6 @@ import net.jmb19905.niftycarts.network.serverbound.ActionKeyMessage;
 import net.jmb19905.niftycarts.network.serverbound.ToggleSlowMessage;
 import net.jmb19905.niftycarts.util.NiftyWorld;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.fml.config.ModConfig;
 import org.lwjgl.glfw.GLFW;
@@ -36,6 +35,7 @@ import static net.jmb19905.niftycarts.NiftyCarts.UPDATE_DRAWN_MESSAGE_ID;
 public class NiftyCartsClient implements ClientModInitializer {
 
 	private static KeyMapping actionKeyMapping;
+	private static KeyMapping toggleSlowMapping;
 
 	@Override
 	public void onInitializeClient() {
@@ -58,9 +58,16 @@ public class NiftyCartsClient implements ClientModInitializer {
 		MenuScreens.register(NiftyCarts.PLOW_MENU_TYPE, PlowScreen::new);
 
 		actionKeyMapping = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-				"key.niftycarts.desc",
+				"key.niftycarts.action",
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_R,
+				"key.categories.niftycarts"
+		));
+
+		toggleSlowMapping = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+				"key.niftycarts.slow",
+				InputConstants.Type.KEYSYM,
+				GLFW.GLFW_KEY_Z,
 				"key.categories.niftycarts"
 		));
 
@@ -71,16 +78,14 @@ public class NiftyCartsClient implements ClientModInitializer {
 				message.encode(buf);
 				ClientPlayNetworking.send(ACTION_KEY_MESSAGE_ID, buf);
 			}
-			var mc = Minecraft.getInstance();
 			var player = client.player;
 			if (player != null && ToggleSlowMessage.getCart(player).isPresent()) {
-				final var binding = mc.options.keySprint;
-				while (binding.consumeClick()) {
+				while (toggleSlowMapping.consumeClick()) {
 					var buf = PacketByteBufs.create();
 					var msg = new ToggleSlowMessage();
 					msg.encode(buf);
 					ClientPlayNetworking.send(NiftyCarts.TOGGLE_SLOW_MESSAGE_ID, buf);
-					KeyMapping.set(binding.getDefaultKey(), false);
+					KeyMapping.set(toggleSlowMapping.getDefaultKey(), false);
 				}
 			}
 			if (!client.isPaused() && client.level != null) {
