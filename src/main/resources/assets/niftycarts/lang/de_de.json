@@ -13,5 +13,7 @@
   "subtitles.niftycarts.cart.attached": "Karren wird angehängt",
   "subtitles.niftycarts.cart.detached": "Karren wird abgehängt",
   "subtitles.niftycarts.cart.placed": "Karren wird platziert",
-  "stat.niftycarts.cart_one_cm": "Strecke auf Karren gefahren"
+  "stat.niftycarts.cart_one_cm": "Strecke auf Karren gefahren",
+  "item.niftycarts.hand_cart": "Handkarren",
+  "entity.niftycarts.hand_cart": "Handkarren"
 }

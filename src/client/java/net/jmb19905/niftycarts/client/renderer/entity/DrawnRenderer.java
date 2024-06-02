@@ -102,6 +102,7 @@ public abstract class DrawnRenderer<T extends AbstractDrawnEntity, M extends Ent
         } else {
             final Map<String, ModelPart> childModels;
             childModels = ((ModelPartMixin) ((Object) bone)).getChildren();
+            //noinspection UnreachableCode
             for (final ModelPart child : childModels.values()) {
                 this.attach(child, attachment, function, stack);
             }

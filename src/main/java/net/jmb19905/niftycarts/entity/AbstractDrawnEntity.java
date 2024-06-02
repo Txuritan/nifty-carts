@@ -63,7 +63,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-@SuppressWarnings("resource")
 public abstract class AbstractDrawnEntity extends Entity {
     private static final EntityDataAccessor<Integer> TIME_SINCE_HIT = SynchedEntityData.defineId(AbstractDrawnEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> FORWARD_DIRECTION = SynchedEntityData.defineId(AbstractDrawnEntity.class, EntityDataSerializers.INT);
@@ -409,7 +408,7 @@ public abstract class AbstractDrawnEntity extends Entity {
     private boolean canPull(final Entity entity) {
         if (entity instanceof Saddleable && !((Saddleable) entity).isSaddleable()) return false;
         if (entity instanceof TamableAnimal && !((TamableAnimal) entity).isTame()) return false;
-        final ArrayList<String> allowed = this.getConfig().pullAnimals.get();
+        final ArrayList<String> allowed = this.getConfig().pullEntities.get();
         if (allowed.isEmpty()) {
             return entity instanceof Player ||
                     entity instanceof Saddleable && !(entity instanceof ItemSteerable);

@@ -5,7 +5,7 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 
-public final class SupplyCartModel extends CartModel<SupplyCartEntity> {
+public final class SupplyCartModel extends CartModel<SupplyCartEntity> implements IFlowerCargoModel {
     private final ModelPart flowerBasket;
 
     public SupplyCartModel(final ModelPart root) {
@@ -19,7 +19,7 @@ public final class SupplyCartModel extends CartModel<SupplyCartEntity> {
     }
 
     public static LayerDefinition createLayer() {
-        final MeshDefinition def = CartModel.createDefinition();
+        final MeshDefinition def = CartModel.createDefinition(9, 25);
 
         final EasyMeshBuilder boardBottom = new EasyMeshBuilder("boardBottom", 0, 0);
         boardBottom.addBox(-15.5F, -11.0F, -2.0F, 29, 22, 1);
@@ -66,7 +66,7 @@ public final class SupplyCartModel extends CartModel<SupplyCartEntity> {
         boardsRear[1] = new EasyMeshBuilder("boards_rear_1", 50, 31);
         boardsRear[1].addBox(-12.0F, -12.0F, 13.5F, 2, 11, 1);
 
-        final EasyMeshBuilder body = CartModel.createBody();
+        final EasyMeshBuilder body = CartModel.createBody(9);
         body.addChild(axis);
         body.addChild(shaft);
         body.addChild(boardBottom);
