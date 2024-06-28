@@ -1,10 +1,10 @@
 package net.jmb19905.niftycarts.network.serverbound;
 
-import it.unimi.dsi.fastutil.Pair;
 import net.jmb19905.niftycarts.NiftyCarts;
 import net.jmb19905.niftycarts.entity.AbstractDrawnEntity;
 import net.jmb19905.niftycarts.network.Message;
 import net.jmb19905.niftycarts.util.NiftyWorld;
+import net.jmb19905.niftycarts.util.fastutil.Pair;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;

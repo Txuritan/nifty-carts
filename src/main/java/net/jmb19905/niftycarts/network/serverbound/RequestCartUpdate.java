@@ -33,7 +33,7 @@ public class RequestCartUpdate implements Message {
     public static void handle(RequestCartUpdate msg, ServerPlayer player) {
         var level = player.level;
         var pulling = NiftyWorld.get(level).getPulling();
-        pulling.keySet().intStream()
+        pulling.keySet().stream()
                 .filter(pullId -> pulling.get(pullId).getId() == msg.cartId)
                 .findFirst().ifPresent(pullId -> {
                     var buf = PacketByteBufs.create();

@@ -5,3 +5,8 @@ accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/wo
 accessible method net/minecraft/client/renderer/entity/layers/HumanoidArmorLayer usesInnerModel (Lnet/minecraft/world/entity/EquipmentSlot;)Z
 accessible method net/minecraft/client/renderer/entity/layers/HumanoidArmorLayer getArmorLocation (Lnet/minecraft/world/item/ArmorItem;ZLjava/lang/String;)Lnet/minecraft/resources/ResourceLocation;
 extendable method net/minecraft/world/entity/Entity positionRider (Lnet/minecraft/world/entity/Entity;)V
+
+accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
+accessible class net/minecraft/world/inventory/MenuType$MenuSupplier
+accessible method net/minecraft/client/gui/screens/MenuScreens register (Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/client/gui/screens/MenuScreens$ScreenConstructor;)V
+accessible method net/minecraft/world/inventory/MenuType <init> (Lnet/minecraft/world/inventory/MenuType$MenuSupplier;)V

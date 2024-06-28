@@ -20,7 +20,7 @@
 			"net.jmb19905.niftycarts.NiftyCarts"
 		],
 		"client": [
-			"net.jmb19905.niftycarts.client.NiftyCartsClient"
+            "net.jmb19905.niftycarts.client.NiftyCartsClient"
 		]
 	},
 	"mixins": [
@@ -31,11 +31,11 @@
 		}
 	],
 	"depends": {
-		"fabricloader": ">=0.15.6",
-		"minecraft": "~1.18.2",
+		"fabricloader": ">=0.13.1",
+		"minecraft": "~1.17.1",
 		"java": ">=17",
-		"fabric-api": "*",
-		"forgeconfigapiport": "3.2.4"
+		"fabric": "*",
+		"forgeconfigapiport": "2.0.5"
 	},
 	"suggests": {
 		"forgeconfigscreens": "*"
